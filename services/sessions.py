@@ -1,0 +1,191 @@
+"""Persistent interview sessions with atomic question progression."""
+
+import json
+from contextlib import contextmanager
+from datetime import datetime, timezone
+from uuid import uuid4
+
+from errors import SessionConflictError, SessionNotFoundError
+from prompts.prompt import VOICE_ANSWER_EVALUATION_PROMPT
+from services.generation import run_json_prompt
+from services.session_models import SessionAnswer, SessionCreate
+from utils.database import connection
+from utils.logging_utils import log_info
+
+
+@contextmanager
+def _connection():
+    with connection() as db:
+        db.execute("""CREATE TABLE IF NOT EXISTS interview_sessions (
+            id TEXT PRIMARY KEY, title TEXT NOT NULL, questions TEXT NOT NULL,
+            role_context TEXT NOT NULL, current_index INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+        )""")
+        db.execute("""CREATE TABLE IF NOT EXISTS interview_answers (
+            session_id TEXT NOT NULL REFERENCES interview_sessions(id),
+            question_index INTEGER NOT NULL, answer_text TEXT NOT NULL,
+            evaluation TEXT NOT NULL, score INTEGER NOT NULL,
+            created_at TEXT NOT NULL,
+            PRIMARY KEY(session_id, question_index)
+        )""")
+        yield db
+
+
+def _now():
+    return datetime.now(timezone.utc).isoformat()
+
+
+def create_session(title, questions, role_context=""):
+    request = SessionCreate(title=title, questions=questions, role_context=role_context)
+    session_id = uuid4().hex
+    now = _now()
+    with _connection() as db:
+        db.execute(
+            "INSERT INTO interview_sessions (id, title, questions, role_context, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                session_id,
+                request.title,
+                json.dumps(request.questions, ensure_ascii=False),
+                request.role_context,
+                now,
+                now,
+            ),
+        )
+    log_info(
+        "session_created", session_id=session_id, question_count=len(request.questions)
+    )
+    return get_session(session_id)
+
+
+def _load(db, session_id):
+    row = db.execute(
+        "SELECT * FROM interview_sessions WHERE id = ?", (session_id,)
+    ).fetchone()
+    if row is None:
+        raise SessionNotFoundError("Interview session not found.")
+    answers = db.execute(
+        "SELECT * FROM interview_answers WHERE session_id = ? ORDER BY question_index",
+        (session_id,),
+    ).fetchall()
+    questions = json.loads(row["questions"])
+    completed = row["current_index"] >= len(questions)
+    return {
+        "id": row["id"],
+        "title": row["title"],
+        "questions": questions,
+        "role_context": row["role_context"],
+        "current_question_index": row["current_index"],
+        "current_question": None if completed else questions[row["current_index"]],
+        "status": "completed" if completed else "active",
+        "total_questions": len(questions),
+        "answered_questions": len(answers),
+        "average_score": (
+            round(sum(answer["score"] for answer in answers) / len(answers), 1)
+            if answers
+            else None
+        ),
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+        "answers": [
+            {
+                "question_index": answer["question_index"],
+                "question": questions[answer["question_index"]],
+                "answer_text": answer["answer_text"],
+                "evaluation": json.loads(answer["evaluation"]),
+                "created_at": answer["created_at"],
+            }
+            for answer in answers
+        ],
+    }
+
+
+def get_session(session_id):
+    with _connection() as db:
+        db.execute("BEGIN")
+        return _load(db, session_id)
+
+
+def list_sessions(limit=50):
+    with _connection() as db:
+        rows = db.execute(
+            """SELECT s.id, s.title, s.questions, s.current_index,
+            s.created_at, s.updated_at, AVG(a.score) AS average_score
+            FROM interview_sessions s LEFT JOIN interview_answers a ON a.session_id = s.id
+            GROUP BY s.id ORDER BY s.created_at DESC LIMIT ?""",
+            (limit,),
+        ).fetchall()
+    return [
+        {
+            "id": row["id"],
+            "title": row["title"],
+            "status": (
+                "completed"
+                if row["current_index"] >= len(json.loads(row["questions"]))
+                else "active"
+            ),
+            "total_questions": len(json.loads(row["questions"])),
+            "answered_questions": row["current_index"],
+            "average_score": (
+                round(row["average_score"], 1)
+                if row["average_score"] is not None
+                else None
+            ),
+            "created_at": row["created_at"],
+            "updated_at": row["updated_at"],
+        }
+        for row in rows
+    ]
+
+
+def submit_answer(session_id, answer_text, expected_question_index):
+    request = SessionAnswer(
+        answer_text=answer_text, expected_question_index=expected_question_index
+    )
+    session = get_session(session_id)
+    if (
+        session["status"] == "completed"
+        or session["current_question_index"] != request.expected_question_index
+    ):
+        raise SessionConflictError(
+            "This question has already been answered. Reload the session to continue."
+        )
+    # Network calls stay outside the database transaction.
+    evaluation = run_json_prompt(
+        VOICE_ANSWER_EVALUATION_PROMPT,
+        question=session["current_question"],
+        answer_text=request.answer_text,
+        jd_text=session["role_context"],
+    )
+    now = _now()
+    with _connection() as db:
+        db.execute("BEGIN IMMEDIATE")
+        current = _load(db, session_id)
+        if (
+            current["current_question_index"] != request.expected_question_index
+            or current["status"] == "completed"
+        ):
+            raise SessionConflictError(
+                "This question has already been answered. Reload the session to continue."
+            )
+        db.execute(
+            "INSERT INTO interview_answers VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                session_id,
+                request.expected_question_index,
+                request.answer_text,
+                json.dumps(evaluation, ensure_ascii=False),
+                evaluation["score"],
+                now,
+            ),
+        )
+        db.execute(
+            "UPDATE interview_sessions SET current_index = current_index + 1, updated_at = ? WHERE id = ?",
+            (now, session_id),
+        )
+        updated = _load(db, session_id)
+    log_info(
+        "session_answer_saved",
+        session_id=session_id,
+        question_index=request.expected_question_index,
+    )
+    return {"session": updated, "answer": updated["answers"][-1]}
