@@ -9,6 +9,7 @@ FastAPI, Streamlit, Groq, and SQLite.
 - Compare resume fit, improve resume bullets, and draft application messages.
 - Practice spoken or written answers with scores and feedback.
 - Save interview sessions with answer-based follow-up questions and resumable progress.
+- Track score trends, recurring feedback, and topics needing practice.
 - Download results as Markdown, PDF, or JSON where supported.
 
 ## Quick Start

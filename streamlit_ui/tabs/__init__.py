@@ -12,6 +12,7 @@ from streamlit_ui.tabs.resume_optimizer import render_resume_improvement_tab
 from streamlit_ui.tabs.resume_pdf import render_resume_pdf_tab
 from streamlit_ui.tabs.resume_text import render_resume_text_tab
 from streamlit_ui.tabs.sessions import render_sessions_tab
+from streamlit_ui.tabs.progress import render_progress_tab
 from streamlit_ui.tabs.speech_to_text import convert_speech_to_text, render_voice_tab
 from streamlit_ui.tabs.voice_practice import render_voice_practice_tab
 
@@ -31,4 +32,5 @@ __all__ = [
     "convert_speech_to_text",
     "render_voice_tab",
     "render_sessions_tab",
+    "render_progress_tab",
 ]

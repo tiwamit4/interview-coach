@@ -256,3 +256,24 @@ across reloads. The session-wide cap is `MAX_SESSION_FOLLOWUPS` (default: 10).
 Malformed or repeated generated questions return `502` without saving the answer
 or advancing progress. Stale submissions return `409`. Generation and evaluation
 run outside the database transaction; answer saving and question insertion are atomic.
+
+## Progress Summary
+
+`GET /progress` returns saved interview-session analytics without model calls.
+Optional query parameters:
+
+| Parameter | Default | Meaning |
+| --- | --- | --- |
+| `days` | All time | Restrict to the previous 1-3650 days |
+| `include_followups` | `true` | Include follow-up answers in score and feedback calculations |
+
+```bash
+curl "http://localhost:8000/progress?days=30&include_followups=false"
+```
+
+The response includes `summary`, daily `score_trend`, `session_scores`,
+`recurring_weaknesses` with original examples, and `topics` with practice reasons,
+suggestions, and questions. Missing averages and insufficient trend data use
+`null`; an empty database returns empty lists and zero counts. Invalid filters
+return `422`. See the [dashboard guide](usage.md#progress-dashboard) for calculation
+and grouping rules.

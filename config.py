@@ -76,3 +76,8 @@ MAX_SESSION_ANSWER_CHARACTERS = 20000
 
 # Maximum generated follow-ups per session (one per planned question).
 MAX_SESSION_FOLLOWUPS = 10
+
+# Progress dashboard: compare two consecutive windows of answers.
+PROGRESS_TREND_WINDOW = 5
+PROGRESS_PRACTICE_SCORE = 70
+PROGRESS_RECURRING_MIN_ANSWERS = 2

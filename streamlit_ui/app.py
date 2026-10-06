@@ -9,6 +9,7 @@ from streamlit_ui.tabs import (
     render_match_score_tab,
     render_resume_improvement_tab,
     render_sessions_tab,
+    render_progress_tab,
     render_voice_practice_tab,
 )
 from streamlit_ui.theme import apply_theme
@@ -48,6 +49,7 @@ def render_tabs():
         tab_cover,
         tab_voice_practice,
         tab_sessions,
+        tab_progress,
         tab_history,
     ) = st.tabs(
         [
@@ -58,6 +60,7 @@ def render_tabs():
             "Application Writer",
             "Voice Practice",
             "Interview Sessions",
+            "Progress Dashboard",
             "History",
         ]
     )
@@ -76,6 +79,8 @@ def render_tabs():
         render_voice_practice_tab()
     with tab_sessions:
         render_sessions_tab()
+    with tab_progress:
+        render_progress_tab()
     with tab_history:
         render_history_tab()
 

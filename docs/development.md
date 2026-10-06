@@ -146,6 +146,7 @@ services/result_models.py  Pydantic contracts for structured AI results
 services/files.py          Shared filenames and text/JSON file saving
 services/uploads.py        Shared upload validation and bounded reads
 services/sessions.py       Persistent interview sessions and answer progression
+services/progress.py       Shared score trends, feedback grouping, and practice priorities
 services/session_models.py Session request validation
 utils/database.py          SQLite transactions, WAL, busy timeouts, and cleanup
 utils/http_client.py       Scraping timeouts and GET retries

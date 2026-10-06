@@ -25,6 +25,9 @@ changing settings. API keys remain in `.env`.
 | `MAX_CHAT_PROMPT_BYTES` | Maximum UTF-8 size of the complete formatted prompt (64 KiB by default) |
 | `CHAT_MAX_COMPLETION_TOKENS`, `CHAT_COMPLETION_EXPANSIONS` | Maximum output budget and number of retries with a larger budget |
 | `SQLITE_BUSY_TIMEOUT_SECONDS` | Time to wait for database write locks |
+| `PROGRESS_TREND_WINDOW` | Number of answers in each of the two score comparison windows (default: 5) |
+| `PROGRESS_PRACTICE_SCORE` | Average topic score below which practice is suggested (default: 70) |
+| `PROGRESS_RECURRING_MIN_ANSWERS` | Distinct answers needed for recurring feedback (default: 2) |
 | `MAX_SESSION_FOLLOWUPS` | Maximum generated follow-up questions per session (default: 10); one per planned question |
 | `MAX_SESSION_QUESTIONS`, `MAX_SESSION_ANSWER_CHARACTERS` | Session question count and answer size limits |
 

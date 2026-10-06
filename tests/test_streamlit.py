@@ -10,6 +10,7 @@ from streamlit.testing.v1 import AppTest
 import config
 from result_fixtures import response_for_prompt
 from services import extraction, generation, sessions
+from services import progress
 from streamlit_ui.tabs import (
     analysis,
     applications,
@@ -38,6 +39,9 @@ class StreamlitTests(unittest.TestCase):
         self.stack.enter_context(patch.object(history, "list_history", return_value=[]))
         self.stack.enter_context(
             patch.object(sessions, "list_sessions", return_value=[])
+        )
+        self.stack.enter_context(
+            patch.object(progress, "read_progress_data", return_value=([], []))
         )
         self.stack.enter_context(
             patch.object(extraction, "scrape_job_description", return_value="JD text")
@@ -72,6 +76,7 @@ class StreamlitTests(unittest.TestCase):
                 "Application Writer",
                 "Voice Practice",
                 "Interview Sessions",
+                "Progress Dashboard",
                 "History",
             ],
         )

@@ -35,6 +35,7 @@ python -m streamlit run streamlit_app.py --server.port 8502
 | Application Writer | Cover letter, recruiter message, LinkedIn DM |
 | Voice Practice | Record or paste answer, get score, feedback, better answer |
 | Interview Sessions | Practice one question at a time, resume saved sessions, and compare progress |
+| Progress Dashboard | Score trends, recurring feedback themes, and suggested practice topics |
 | History | View saved outputs |
 
 Most generated Streamlit outputs include download buttons:
@@ -229,3 +230,34 @@ the session. Duplicate or stale answers return `409`, missing sessions return
 `404`, and invalid inputs return `422`. Failed evaluation leaves the question
 and saved progress unchanged. Audio answers can also be transcribed using
 `/voice/run` before submitting the resulting text to the session API.
+
+## Progress Dashboard
+
+Open `Progress Dashboard` after answering questions in Interview Sessions. Select
+all time or the last 7, 30, or 90 days. You can exclude follow-up answers to compare
+planned questions only. No additional AI requests are made.
+
+- Summary cards show sessions, completed sessions, evaluated answers, and the
+  answer-weighted average score. Sessions with no answers do not add a zero score.
+- The trend chart shows daily average scores in UTC. The score change compares
+  the latest five answers with the preceding five, and is omitted until ten
+  answers are available. Different question difficulty and roles affect scores.
+- Recurring weaknesses group original improvement suggestions using matching
+  phrases. An answer counts at most once per theme; unmatched suggestions are
+  grouped only when their normalized text is identical. Expand a theme to see
+  example feedback and the number of answers and sessions where it appeared.
+- Topics are matched from question wording, with a general category when no
+  known topic matches. An answer can count under several topics. A topic is a
+  practice priority if its average is below 70/100 or the same feedback theme
+  appears in at least two answers. Expand a priority to see saved suggestions
+  and lower-scoring questions to revisit in a new session.
+
+The dashboard uses all saved sessions, beyond the session picker's 50-item limit.
+Time and follow-up filters apply to scores, themes, and topic priorities. Session
+counts include sessions with an answer in range or created in range; completion
+reflects their current saved status. Standalone Voice Practice evaluations are
+not included. The empty state explains how to start collecting progress.
+
+Grouping uses simple English phrase matching and may miss related wording or
+misclassify a topic. Review the original feedback before choosing what to practise.
+Configure thresholds and the comparison window in `config.py`.

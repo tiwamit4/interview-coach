@@ -4,6 +4,7 @@ from fastapi import APIRouter, Query
 
 from api_backend.exceptions import to_http_exception
 from services import sessions
+from services.progress import get_progress
 from services.session_models import SessionAnswer, SessionCreate
 
 router = APIRouter()
@@ -41,5 +42,15 @@ def answer_interview_question(session_id: str, request: SessionAnswer):
         return sessions.submit_answer(
             session_id, request.answer_text, request.expected_question_index
         )
+    except Exception as exc:
+        raise to_http_exception(exc) from exc
+
+
+@router.get("/progress")
+def interview_progress(
+    days: int | None = Query(None, ge=1, le=3650), include_followups: bool = True
+):
+    try:
+        return get_progress(days, include_followups)
     except Exception as exc:
         raise to_http_exception(exc) from exc

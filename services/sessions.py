@@ -266,3 +266,20 @@ def submit_answer(session_id, answer_text, expected_question_index):
         followup_generated=followup is not None,
     )
     return {"session": updated, "answer": updated["answers"][-1]}
+
+
+def read_progress_data():
+    """Read all session metadata and evaluated answers in one consistent snapshot."""
+    with _connection() as db:
+        db.execute("BEGIN")
+        session_rows = db.execute(
+            "SELECT id, title, questions, current_index, created_at FROM interview_sessions"
+        ).fetchall()
+        answer_rows = db.execute(
+            """SELECT a.session_id, a.question_index, a.score, a.evaluation, a.created_at,
+            CASE WHEN f.question_index IS NULL THEN 0 ELSE 1 END AS is_followup
+            FROM interview_answers a LEFT JOIN interview_followups f
+            ON f.session_id = a.session_id AND f.question_index = a.question_index
+            ORDER BY a.created_at, a.session_id, a.question_index"""
+        ).fetchall()
+    return [dict(row) for row in session_rows], [dict(row) for row in answer_rows]
