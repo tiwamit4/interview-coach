@@ -59,3 +59,6 @@ Thumbs.db
 
 # Separate local repository
 /portfolio/
+
+/requirements-dev.txt
+/.env.example
