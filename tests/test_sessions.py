@@ -139,6 +139,7 @@ class SessionTests(unittest.TestCase):
             "from streamlit_ui.tabs.sessions import render_sessions_tab\nrender_sessions_tab()"
         ).run()
         app_test.text_area[0].set_value("First question\nSecond question")
+        app_test.checkbox[0].uncheck()
         app_test.button[0].click().run()
         self.assertFalse(app_test.exception)
         self.assertFalse(app_test.error)

@@ -9,9 +9,14 @@ from prompts.prompt import (
     MATCH_SCORE_PROMPT,
     RESUME_IMPROVEMENT_PROMPT,
     VOICE_ANSWER_EVALUATION_PROMPT,
+    SESSION_FOLLOWUP_PROMPT,
 )
 
 RESULTS = {
+    SESSION_FOLLOWUP_PROMPT: {
+        "question": "How did you verify the project's results?",
+        "reason": "The answer describes a project without its validation method.",
+    },
     MATCH_SCORE_PROMPT: {
         "role_fit_score": 90,
         "summary": "The resume aligns with the role.",

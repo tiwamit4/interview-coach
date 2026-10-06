@@ -5,8 +5,10 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from errors import SessionConflictError, SessionNotFoundError
-from prompts.prompt import VOICE_ANSWER_EVALUATION_PROMPT
+import config
+
+from errors import GeneratedResultError, SessionConflictError, SessionNotFoundError
+from prompts.prompt import SESSION_FOLLOWUP_PROMPT, VOICE_ANSWER_EVALUATION_PROMPT
 from services.generation import run_json_prompt
 from services.session_models import SessionAnswer, SessionCreate
 from utils.database import connection
@@ -28,6 +30,15 @@ def _connection():
             created_at TEXT NOT NULL,
             PRIMARY KEY(session_id, question_index)
         )""")
+        db.execute("""CREATE TABLE IF NOT EXISTS interview_session_options (
+            session_id TEXT PRIMARY KEY REFERENCES interview_sessions(id),
+            followups_enabled INTEGER NOT NULL
+        )""")
+        db.execute("""CREATE TABLE IF NOT EXISTS interview_followups (
+            session_id TEXT NOT NULL REFERENCES interview_sessions(id),
+            question_index INTEGER NOT NULL, parent_question_index INTEGER NOT NULL,
+            reason TEXT NOT NULL, PRIMARY KEY(session_id, question_index)
+        )""")
         yield db
 
 
@@ -35,8 +46,13 @@ def _now():
     return datetime.now(timezone.utc).isoformat()
 
 
-def create_session(title, questions, role_context=""):
-    request = SessionCreate(title=title, questions=questions, role_context=role_context)
+def create_session(title, questions, role_context="", followups_enabled=False):
+    request = SessionCreate(
+        title=title,
+        questions=questions,
+        role_context=role_context,
+        followups_enabled=followups_enabled,
+    )
     session_id = uuid4().hex
     now = _now()
     with _connection() as db:
@@ -50,6 +66,10 @@ def create_session(title, questions, role_context=""):
                 now,
                 now,
             ),
+        )
+        db.execute(
+            "INSERT INTO interview_session_options VALUES (?, ?)",
+            (session_id, int(request.followups_enabled)),
         )
     log_info(
         "session_created", session_id=session_id, question_count=len(request.questions)
@@ -68,12 +88,28 @@ def _load(db, session_id):
         (session_id,),
     ).fetchall()
     questions = json.loads(row["questions"])
+    options = db.execute(
+        "SELECT followups_enabled FROM interview_session_options WHERE session_id = ?",
+        (session_id,),
+    ).fetchone()
+    followups = [
+        dict(item)
+        for item in db.execute(
+            "SELECT question_index, parent_question_index, reason FROM interview_followups WHERE session_id = ? ORDER BY question_index",
+            (session_id,),
+        ).fetchall()
+    ]
     completed = row["current_index"] >= len(questions)
     return {
         "id": row["id"],
         "title": row["title"],
         "questions": questions,
         "role_context": row["role_context"],
+        "followups_enabled": bool(options["followups_enabled"]) if options else False,
+        "followups": followups,
+        "current_question_is_followup": any(
+            item["question_index"] == row["current_index"] for item in followups
+        ),
         "current_question_index": row["current_index"],
         "current_question": None if completed else questions[row["current_index"]],
         "status": "completed" if completed else "active",
@@ -156,6 +192,29 @@ def submit_answer(session_id, answer_text, expected_question_index):
         answer_text=request.answer_text,
         jd_text=session["role_context"],
     )
+    followup = None
+    if (
+        session["followups_enabled"]
+        and not session["current_question_is_followup"]
+        and len(session["followups"]) < config.MAX_SESSION_FOLLOWUPS
+    ):
+        followup = run_json_prompt(
+            SESSION_FOLLOWUP_PROMPT,
+            question=session["current_question"],
+            answer_text=request.answer_text,
+            role_context=session["role_context"],
+            existing_questions=json.dumps(session["questions"], ensure_ascii=False),
+        )
+
+        def normalized(text):
+            return " ".join(text.casefold().split()).rstrip("?.!")
+
+        if normalized(followup["question"]) in {
+            normalized(question) for question in session["questions"]
+        }:
+            raise GeneratedResultError(
+                "The generated follow-up repeats an existing question. Try submitting again."
+            )
     now = _now()
     with _connection() as db:
         db.execute("BEGIN IMMEDIATE")
@@ -178,6 +237,23 @@ def submit_answer(session_id, answer_text, expected_question_index):
                 now,
             ),
         )
+        if followup is not None:
+            questions = current["questions"]
+            next_index = request.expected_question_index + 1
+            questions.insert(next_index, followup["question"])
+            db.execute(
+                "UPDATE interview_sessions SET questions = ? WHERE id = ?",
+                (json.dumps(questions, ensure_ascii=False), session_id),
+            )
+            db.execute(
+                "INSERT INTO interview_followups VALUES (?, ?, ?, ?)",
+                (
+                    session_id,
+                    next_index,
+                    request.expected_question_index,
+                    followup["reason"],
+                ),
+            )
         db.execute(
             "UPDATE interview_sessions SET current_index = current_index + 1, updated_at = ? WHERE id = ?",
             (now, session_id),
@@ -187,5 +263,6 @@ def submit_answer(session_id, answer_text, expected_question_index):
         "session_answer_saved",
         session_id=session_id,
         question_index=request.expected_question_index,
+        followup_generated=followup is not None,
     )
     return {"session": updated, "answer": updated["answers"][-1]}

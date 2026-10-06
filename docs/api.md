@@ -235,3 +235,24 @@ POST /improve/resume
 POST /voice/evaluate-answer
 POST /analyze/jd-resume
 ```
+
+## Answer-Based Session Follow-Ups
+
+Create an interview session with follow-ups enabled:
+
+```json
+{"title": "Python practice", "questions": ["Describe a project you built."], "role_context": "Python developer", "followups_enabled": true}
+```
+
+Send this body to `POST /sessions`. The option defaults to false for API clients.
+Submit answers to `POST /sessions/{session_id}/answers` using `answer_text` and
+`expected_question_index`, as described in the [usage guide](usage.md#interview-sessions).
+When enabled, a planned answer inserts one generated follow-up as the next question.
+Answering it returns to the planned sequence. Session responses include
+`current_question_is_followup` and a `followups` list containing each generated
+question's index, parent index, and reason. The questions and metadata persist
+across reloads. The session-wide cap is `MAX_SESSION_FOLLOWUPS` (default: 10).
+
+Malformed or repeated generated questions return `502` without saving the answer
+or advancing progress. Stale submissions return `409`. Generation and evaluation
+run outside the database transaction; answer saving and question insertion are atomic.

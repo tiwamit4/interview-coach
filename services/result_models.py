@@ -86,3 +86,12 @@ class VoiceEvaluation(GeneratedResult):
     strengths: list[NonEmptyText]
     improvements: list[NonEmptyText]
     better_answer: NonEmptyText
+
+
+class FollowUpQuestion(GeneratedResult):
+    question: Annotated[
+        str, StringConstraints(strip_whitespace=True, min_length=1, max_length=2000)
+    ]
+    reason: Annotated[
+        str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)
+    ]

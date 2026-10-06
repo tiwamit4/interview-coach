@@ -19,6 +19,7 @@ class SessionCreate(BaseModel):
         min_length=1, max_length=config.MAX_SESSION_QUESTIONS
     )
     role_context: str = Field(default="", max_length=10000)
+    followups_enabled: bool = Field(default=False, strict=True)
 
 
 class SessionAnswer(BaseModel):

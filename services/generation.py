@@ -11,6 +11,7 @@ from prompts.prompt import (
     MATCH_SCORE_PROMPT,
     RESUME_IMPROVEMENT_PROMPT,
     VOICE_ANSWER_EVALUATION_PROMPT,
+    SESSION_FOLLOWUP_PROMPT,
 )
 from services.result_models import (
     ApplicationMessages,
@@ -20,6 +21,7 @@ from services.result_models import (
     NonEmptyText,
     ResumeImprovements,
     VoiceEvaluation,
+    FollowUpQuestion,
 )
 from utils.groq_service import groq_model_call, groq_prompt_call
 from utils.logging_utils import log_info, log_operation
@@ -30,6 +32,7 @@ RESPONSE_MODELS = {
     COVER_LETTER_PROMPT: ApplicationMessages,
     RESUME_IMPROVEMENT_PROMPT: ResumeImprovements,
     VOICE_ANSWER_EVALUATION_PROMPT: VoiceEvaluation,
+    SESSION_FOLLOWUP_PROMPT: FollowUpQuestion,
 }
 RESULT_NAMES = {
     MatchAnalysis: "match analysis",
@@ -37,6 +40,7 @@ RESULT_NAMES = {
     ApplicationMessages: "application messages",
     ResumeImprovements: "resume improvements",
     VoiceEvaluation: "answer evaluation",
+    FollowUpQuestion: "follow-up question",
 }
 TEXT_RESULT = TypeAdapter(NonEmptyText)
 

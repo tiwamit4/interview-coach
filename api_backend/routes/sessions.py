@@ -13,7 +13,10 @@ router = APIRouter()
 def create_interview_session(request: SessionCreate):
     try:
         return sessions.create_session(
-            request.title, request.questions, request.role_context
+            request.title,
+            request.questions,
+            request.role_context,
+            request.followups_enabled,
         )
     except Exception as exc:
         raise to_http_exception(exc) from exc

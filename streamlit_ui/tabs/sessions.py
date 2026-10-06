@@ -26,6 +26,11 @@ def render_sessions_tab():
                     height=180,
                 )
                 context = st.text_area("Optional role context", height=100)
+                followups_enabled = st.checkbox(
+                    "Generate follow-up questions",
+                    value=True,
+                    help="Ask one answer-based follow-up per planned question, up to the configured session limit.",
+                )
                 start = st.form_submit_button("Start Session")
             if start:
                 questions = [
@@ -36,7 +41,9 @@ def render_sessions_tab():
                 if not questions:
                     st.warning("Enter at least one question.")
                     return
-                created = sessions.create_session(title, questions, context)
+                created = sessions.create_session(
+                    title, questions, context, followups_enabled
+                )
                 st.session_state["interview_session_id"] = created["id"]
         items = sessions.list_sessions()
         if not items:
@@ -90,6 +97,15 @@ def render_sessions_tab():
         else:
             index = session["current_question_index"]
             st.subheader(f"Question {index + 1} of {session['total_questions']}")
+            if session["current_question_is_followup"]:
+                metadata = next(
+                    item
+                    for item in session["followups"]
+                    if item["question_index"] == index
+                )
+                st.caption(
+                    f"Follow-up to question {metadata['parent_question_index'] + 1}: {metadata['reason']}"
+                )
             st.write(session["current_question"])
             mode = st.radio(
                 "Session answer input",
@@ -118,7 +134,9 @@ def render_sessions_tab():
                 if not answer.strip():
                     st.warning("Record or paste an answer first.")
                     return
-                with st.spinner("Evaluating your answer..."):
+                with st.spinner(
+                    "Evaluating your answer and preparing the next question..."
+                ):
                     sessions.submit_answer(selected, answer, index)
                 st.session_state["interview_session_id"] = selected
                 st.rerun()
