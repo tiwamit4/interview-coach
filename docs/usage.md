@@ -261,3 +261,37 @@ not included. The empty state explains how to start collecting progress.
 Grouping uses simple English phrase matching and may miss related wording or
 misclassify a topic. Review the original feedback before choosing what to practise.
 Configure thresholds and the comparison window in `config.py`.
+
+## Grounded Answer Feedback
+
+New Voice Practice and Interview Sessions evaluations use rubric version `1`.
+The overall score is the sum of four equally weighted criteria:
+
+| Criterion | Maximum | What it measures |
+| --- | --- | --- |
+| Relevance | 25 | Whether the answer addresses the question and relevant role needs |
+| Depth | 25 | Reasoning, decisions, trade-offs, or steps appropriate to the question |
+| Supporting details | 25 | Concrete examples, explanations, or outcomes supporting claims |
+| Clarity | 25 | Understandable wording, organization, and focus |
+
+Each criterion uses these anchors: 0 means not demonstrated or off target;
+1-6 weak/incomplete; 7-12 basic with important gaps; 13-18 solid with some gaps;
+19-25 strong and complete for the question. Metrics are not required when they
+would be irrelevant to a conceptual question.
+
+Expand a criterion under `Score breakdown` to see its points, reasoning, and
+1-3 exact passages from your answer. Quoted passages are checked against the
+submitted text, including spelling, capitalization, and whitespace. A criterion
+marked not demonstrated receives zero and explains what is missing without
+inventing a quote. The score sum and evidence rules are validated before results
+reach the UI, API, files, or session history. Invalid output produces a clear error;
+failed session evaluation does not save the answer or advance the question.
+
+Markdown, PDF, and JSON exports include the rubric and evidence. Suggested better
+answers are instructed to reuse supplied facts and mark missing details with
+bracketed placeholders. Quote checks verify source text, not whether a candidate's
+claim is true or whether the evaluator's reasoning is correct.
+
+Existing saved evaluations remain readable and are labeled as predating the rubric.
+They are not rescored or given invented historical evidence. Dashboard trends can
+therefore include scores from both earlier and current evaluation methods.

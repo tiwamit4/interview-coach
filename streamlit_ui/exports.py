@@ -161,6 +161,31 @@ def resume_improvements_to_markdown(result):
     return "\n\n".join(part for part in parts if part)
 
 
+def _rubric_to_markdown(evaluation):
+    rubric = evaluation.get("rubric")
+    if not rubric:
+        return "This saved evaluation predates the scoring rubric; quoted evidence is unavailable."
+    labels = {
+        "relevance": "Relevance",
+        "depth": "Depth",
+        "supporting_details": "Supporting details",
+        "clarity": "Clarity",
+    }
+    parts = [f"## Score Breakdown (Rubric {evaluation.get('rubric_version', '1')})"]
+    for name, label in labels.items():
+        criterion = rubric[name]
+        parts.extend([f"### {label}: {criterion['points']}/25", criterion["reasoning"]])
+        if criterion["quotes"]:
+            parts.extend(
+                "> " + quote.replace("\n", "\n> ") for quote in criterion["quotes"]
+            )
+        else:
+            parts.append(
+                "Not demonstrated in this answer; no supporting passage cited."
+            )
+    return "\n\n".join(parts)
+
+
 def voice_evaluation_to_markdown(result):
     evaluation = result.get("evaluation", {})
     return "\n\n".join(
@@ -168,6 +193,7 @@ def voice_evaluation_to_markdown(result):
             _markdown_header("Voice Interview Evaluation"),
             f"**Answer Score:** {evaluation.get('score', 0)}/100",
             f"**Feedback:** {_line(evaluation.get('feedback')) or 'Not provided'}",
+            _rubric_to_markdown(evaluation),
             "## Strengths",
             _bullet_list(evaluation.get("strengths", [])),
             "## Improvements",

@@ -200,11 +200,46 @@ def render_resume_improvements(result):
     render_json_download(result, "resume_improvements.json")
 
 
+def render_evaluation_rubric(evaluation):
+    rubric = evaluation.get("rubric")
+    if not rubric:
+        st.caption(
+            "This saved evaluation predates the scoring rubric; quoted evidence is unavailable."
+        )
+        return
+    st.markdown("### Score breakdown")
+    st.caption(
+        f"Rubric version {evaluation.get('rubric_version', '1')}: four equally weighted criteria, 25 points each."
+    )
+    labels = {
+        "relevance": "Relevance",
+        "depth": "Depth",
+        "supporting_details": "Supporting details",
+        "clarity": "Clarity",
+    }
+    for name, label in labels.items():
+        criterion = rubric[name]
+        with st.expander(f"{label}: {criterion['points']}/25"):
+            st.write(criterion["reasoning"])
+            if criterion["quotes"]:
+                st.write("Passages from your answer:")
+                for quote in criterion["quotes"]:
+                    st.text(quote)
+            else:
+                st.write(
+                    "Not demonstrated in this answer; no supporting passage cited."
+                )
+    st.caption(
+        "Quotes are checked against your submitted answer. They do not independently verify its claims or the evaluator's reasoning."
+    )
+
+
 def render_voice_evaluation(result):
     evaluation = result["evaluation"]
     st.subheader("Voice Interview Evaluation")
     st.metric("Answer Score", f"{evaluation.get('score', 0)}/100")
     st.markdown(f"**Feedback:** {evaluation.get('feedback', 'Not provided')}")
+    render_evaluation_rubric(evaluation)
 
     st.markdown("### Strengths")
     for item in evaluation.get("strengths", []):

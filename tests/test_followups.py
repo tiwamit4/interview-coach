@@ -45,7 +45,9 @@ class FollowUpTests(unittest.TestCase):
                     "reason": "Explore the validation of the project described in the answer.",
                 }
             )
-        return json.dumps(result_for_prompt(prompt))
+        return json.dumps(
+            result_for_prompt(prompt, values.get("answer_text", "Answer"))
+        )
 
     def create(self, questions=None):
         response = self.client.post(

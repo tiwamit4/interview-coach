@@ -80,13 +80,13 @@ class SharedServiceTests(unittest.TestCase):
                 api_helpers.run_json_prompt(
                     VOICE_ANSWER_EVALUATION_PROMPT, answer_text="resume"
                 ),
-                result_for_prompt(VOICE_ANSWER_EVALUATION_PROMPT),
+                result_for_prompt(VOICE_ANSWER_EVALUATION_PROMPT, "resume"),
             )
             self.assertEqual(
                 ui_helpers.run_json_prompt(
                     VOICE_ANSWER_EVALUATION_PROMPT, answer_text="resume"
                 ),
-                result_for_prompt(VOICE_ANSWER_EVALUATION_PROMPT),
+                result_for_prompt(VOICE_ANSWER_EVALUATION_PROMPT, "resume"),
             )
             self.assertEqual(call.call_count, 2)
         with patch.object(

@@ -6,7 +6,7 @@ import streamlit as st
 
 from services import sessions
 from services.extraction import extract_audio_bytes
-from streamlit_ui.components import render_voice_evaluation
+from streamlit_ui.components import render_voice_evaluation, render_evaluation_rubric
 from streamlit_ui.helpers import show_error
 from streamlit_ui.recorder import record_live_audio
 
@@ -148,5 +148,6 @@ def render_sessions_tab():
                 st.write(answer["answer_text"])
                 st.write(f"Score: {answer['evaluation']['score']}/100")
                 st.write(answer["evaluation"]["feedback"])
+                render_evaluation_rubric(answer["evaluation"])
     except Exception as exc:
         show_error(exc, operation="interview_session")

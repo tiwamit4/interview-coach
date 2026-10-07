@@ -57,7 +57,7 @@ def render_progress_tab():
         )
         window = summary["trend_window"]
         st.caption(
-            f"Daily averages use UTC. The score change compares the latest {window} answers with the preceding {window}; it needs {2 * window} answers. AI scores may vary with question difficulty and role."
+            f"Daily averages use UTC. The score change compares the latest {window} answers with the preceding {window}; it needs {2 * window} answers. AI scores may vary with question difficulty and role. Older saved scores may use an earlier evaluation method."
         )
         st.dataframe(
             [

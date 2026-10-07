@@ -142,7 +142,7 @@ api_backend/routes/        Questions, workflows, voice, extraction, analysis, hi
 streamlit_app.py           Streamlit launcher
 services/extraction.py     Shared job description, resume, and audio extraction
 services/generation.py     Shared question generation, prompts, and JSON parsing
-services/result_models.py  Pydantic contracts for structured AI results
+services/result_models.py  Pydantic contracts, rubric arithmetic, and exact-answer evidence validation
 services/files.py          Shared filenames and text/JSON file saving
 services/uploads.py        Shared upload validation and bounded reads
 services/sessions.py       Persistent interview sessions and answer progression

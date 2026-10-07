@@ -16,7 +16,7 @@ class GeneratedResultTests(unittest.TestCase):
         with patch.object(
             generation, "groq_prompt_call", return_value=json.dumps(payload)
         ):
-            return generation.run_json_prompt(prompt)
+            return generation.run_json_prompt(prompt, answer_text="Answer")
 
     def test_all_complete_response_shapes_are_preserved(self):
         for prompt, result in RESULTS.items():
@@ -27,7 +27,9 @@ class GeneratedResultTests(unittest.TestCase):
                     "groq_prompt_call",
                     return_value="```json\n" + json.dumps(result) + "\n```",
                 ):
-                    self.assertEqual(generation.run_json_prompt(prompt), result)
+                    self.assertEqual(
+                        generation.run_json_prompt(prompt, answer_text="Answer"), result
+                    )
 
     def test_missing_required_fields_and_wrong_root_types(self):
         for prompt in RESULTS:
@@ -52,6 +54,9 @@ class GeneratedResultTests(unittest.TestCase):
             for score in (0, 100):
                 payload = result_for_prompt(prompt)
                 payload[field] = score
+                if prompt == VOICE_ANSWER_EVALUATION_PROMPT:
+                    for criterion in payload["rubric"].values():
+                        criterion["points"] = score // 4
                 self.assertEqual(self.generate(prompt, payload)[field], score)
 
     def test_nested_items_blank_strings_and_unexpected_fields(self):
@@ -124,7 +129,7 @@ class GeneratedResultTests(unittest.TestCase):
         ):
             self.assertEqual(
                 generation.run_json_prompt(
-                    "new prompt", response_model=VoiceEvaluation
+                    "new prompt", response_model=VoiceEvaluation, answer_text="Answer"
                 ),
                 payload,
             )

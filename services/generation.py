@@ -95,7 +95,9 @@ def run_json_prompt(
             f"Groq returned invalid JSON for {name}. Try generating again."
         ) from exc
     try:
-        result = model.model_validate(payload, strict=True).model_dump(mode="json")
+        result = model.model_validate(
+            payload, strict=True, context={"answer_text": values.get("answer_text")}
+        ).model_dump(mode="json")
     except ValidationError as exc:
         issues = []
         for error in exc.errors(include_input=False, include_url=False)[:3]:

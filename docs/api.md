@@ -277,3 +277,23 @@ suggestions, and questions. Missing averages and insufficient trend data use
 `null`; an empty database returns empty lists and zero counts. Invalid filters
 return `422`. See the [dashboard guide](usage.md#progress-dashboard) for calculation
 and grouping rules.
+
+## Grounded Evaluation Response
+
+New `/voice/run` (`evaluate_answer`), `/voice/evaluate-answer`, and session answer
+responses retain `score`, `feedback`, `strengths`, `improvements`, and `better_answer`,
+and add required `rubric_version: "1"` and `rubric`. Rubric keys are exactly
+`relevance`, `depth`, `supporting_details`, and `clarity`. Each contains:
+
+```json
+{"points": 18, "reasoning": "Explains the implementation but not its trade-offs.", "evidence_status": "demonstrated", "quotes": ["I built a Python API."]}
+```
+
+`points` must be an integer from 0 to 25, and the overall score must equal their
+sum. Demonstrated criteria need 1-3 exact answer quotes, each at most 2000 characters.
+A `not_demonstrated` criterion requires zero points, an empty quotes list, and an
+explanation. Quotes from only the question or JD, paraphrases, missing criteria,
+incorrect totals, and malformed outputs return `502` before saving. Validation
+errors do not echo the submitted answer or rejected quotes. Quote matching does
+not establish the truth of the candidate's claims. See the
+[rubric guide](usage.md#grounded-answer-feedback) for score anchors and legacy behavior.

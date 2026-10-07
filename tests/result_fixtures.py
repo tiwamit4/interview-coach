@@ -84,15 +84,36 @@ RESULTS = {
         "strengths": ["Clear explanation"],
         "improvements": ["Add a concrete outcome"],
         "better_answer": "Explain the project and its outcome.",
+        "rubric_version": "1",
+        "rubric": {
+            name: {
+                "points": points,
+                "reasoning": "The cited passage supports this criterion, with room for more detail.",
+                "evidence_status": "demonstrated",
+                "quotes": ["Answer"],
+            }
+            for name, points in (
+                ("relevance", 23),
+                ("depth", 22),
+                ("supporting_details", 22),
+                ("clarity", 23),
+            )
+        },
     },
 }
 
 
-def result_for_prompt(prompt):
-    return deepcopy(RESULTS[prompt])
+def result_for_prompt(prompt, answer_text="Answer"):
+    result = deepcopy(RESULTS[prompt])
+    if prompt == VOICE_ANSWER_EVALUATION_PROMPT:
+        for criterion in result["rubric"].values():
+            criterion["quotes"] = [answer_text[:2000]]
+    return result
 
 
 def response_for_prompt(prompt, **values):
     if prompt in RESULTS:
-        return json.dumps(RESULTS[prompt])
+        return json.dumps(
+            result_for_prompt(prompt, values.get("answer_text", "Answer"))
+        )
     return "Interview questions"
