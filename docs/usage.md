@@ -148,10 +148,11 @@ data/applications/
 3. Choose answer input:
    - record speech
    - paste text
-   Live recording starts when you click the microphone and stops automatically
-   after 600 ms of detected silence. Click again to record a new answer.
-4. Click `Evaluate Answer`.
-5. If audio is recorded, the app transcribes it first using Groq Whisper.
+   Click the recorder to start; a live transcript preview appears as you speak
+   when browser speech recognition is available. Stop manually, or recording
+   stops after the configured silence threshold once speech has started.
+4. After stopping, review and correct the final Groq transcript.
+5. Click `Evaluate Answer`; the reviewed text is used for scoring.
 6. The app evaluates the answer and displays:
    - answer score
    - feedback
@@ -295,3 +296,30 @@ claim is true or whether the evaluator's reasoning is correct.
 Existing saved evaluations remain readable and are labeled as predating the rubric.
 They are not rescored or given invented historical evidence. Dashboard trends can
 therefore include scores from both earlier and current evaluation methods.
+
+## Live Voice Transcript
+
+Voice Practice and Interview Sessions show an updating browser transcript during
+recording when the browser supports Web Speech recognition. The preview is approximate.
+Browser recognition may send audio to its provider and may require a network
+connection; the recorder explains this before you start. Browser support and
+microphone permission vary. If preview is unavailable or fails, audio recording
+continues and the app prepares a Groq transcript after stopping. Record from
+localhost or HTTPS and allow microphone access.
+
+Once recording stops, `Review your transcript` displays the final Groq text. Edit
+it before evaluating or submitting; the edited text is what gets scored and saved.
+A successful final transcription is cached for the current recording, so reruns
+and edits do not retranscribe it. A new recording clears the displayed old answer.
+Failed transcription offers an explicit retry and never reuses an older answer.
+Submission is disabled while the recorder is active.
+
+Default limits: 300 seconds per recording, 15 seconds to begin speaking, and
+600 ms of silence after speech begins. Audio size limits apply in the browser
+and on the server. You can change these settings and the browser preview language
+in `config.py`. `LIVE_TRANSCRIPTION_LANGUAGE` is a browser locale such as `en-US`
+or `hi-IN`; Groq's `VOICE_LANGUAGE` is configured separately.
+
+The browser requests mono audio at the configured sample rate, but the actual
+encoding depends on browser support. Recordings use WebM/Opus or M4A. Microphone
+and recognition resources are released after recording or when leaving the page.

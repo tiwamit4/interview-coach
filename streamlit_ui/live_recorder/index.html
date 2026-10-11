@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {font-family: system-ui,sans-serif; margin: 0; color: var(--text,#222); background: var(--background,white)}
+button {padding: .6rem 1rem; border-radius: .5rem; border: 1px solid #888; background: transparent; color: inherit; cursor: pointer}
+button:disabled {opacity: .5; cursor: wait} button.recording {border-color: #d33; color: #d33}
+#transcript {white-space: pre-wrap; padding: .8rem; min-height: 65px; max-height: 160px; overflow: auto; border: 1px solid #888; border-radius: .4rem}
+#status, #notice {font-size: .85rem; margin: .5rem 0} #notice {opacity: .8}
+</style></head><body>
+<button id="record" type="button">Start recording</button>
+<p id="status" role="status" aria-live="polite">Ready to record.</p>
+<div id="transcript" aria-label="Live transcript" aria-live="polite">Your speech will appear here while recording.</div>
+<p id="notice">Live preview uses your browser's speech service and may send audio to its provider. The final transcript uses Groq after recording.</p>
+<script src="recorder.js"></script></body></html>

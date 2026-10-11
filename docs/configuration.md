@@ -16,6 +16,9 @@ changing settings. API keys remain in `.env`.
 | `DATA_PATH` and output folder constants | Root and individual folders for generated files |
 | `DB_PATH` | SQLite history database location |
 | `RECORDING_SILENCE_SECONDS`, `RECORDING_SAMPLE_RATE`, `RECORDING_AUTO_START` | Microphone silence threshold, sample rate, and automatic start |
+| `LIVE_TRANSCRIPTION_LANGUAGE` | Browser speech preview locale (default: `en-US`) |
+| `RECORDING_MAX_SECONDS`, `RECORDING_START_TIMEOUT_SECONDS` | Maximum recording duration and wait for initial speech (defaults: 300 and 15 seconds) |
+| `RECORDING_ENERGY_THRESHOLD` | Audio energy threshold for silence detection (default: 0.01) |
 | `MAX_RESUME_UPLOAD_MB`, `MAX_AUDIO_UPLOAD_MB` | Resume and audio upload limits in MiB (defaults: 10 and 25) |
 | `UPLOAD_READ_CHUNK_BYTES` | Maximum chunk size for bounded API file reads |
 | `LOG_LEVEL` | Structured application log level |

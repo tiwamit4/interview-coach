@@ -2,15 +2,18 @@
 
 import streamlit as st
 
-from config import VOICE_MODEL as DEFAULT_MODEL, VOICE_PRACTICE_PATH
+from config import VOICE_PRACTICE_PATH
 from prompts.prompt import VOICE_ANSWER_EVALUATION_PROMPT
 from services.extraction import (
-    extract_audio_bytes,
     extract_job_description as scrape_job_description,
 )
 from streamlit_ui.components import render_voice_evaluation
 from streamlit_ui.helpers import run_json_prompt, safe_filename, save_result, show_error
-from streamlit_ui.recorder import record_live_audio
+from streamlit_ui.recorder import (
+    record_live_audio,
+    recording_active,
+    review_recorded_answer,
+)
 from utils.history import save_history
 
 
@@ -31,6 +34,9 @@ def render_voice_practice_tab():
         answer_audio = record_live_audio(
             "Record your answer", key="voice_practice_recorder"
         )
+        answer_text = review_recorded_answer(
+            answer_audio, key="voice_practice_recorder"
+        )
     else:
         answer_text = st.text_area("Paste your answer", height=180)
     save_output = st.checkbox(
@@ -38,17 +44,16 @@ def render_voice_practice_tab():
         value=True,
         key="save_voice_practice",
     )
-    if st.button("Evaluate Answer", type="primary"):
+    if st.button(
+        "Evaluate Answer",
+        type="primary",
+        disabled=input_mode == "Record speech"
+        and recording_active("voice_practice_recorder"),
+    ):
         if not question.strip():
             st.warning("Enter an interview question.")
             return
         try:
-            if answer_audio:
-                st.audio(answer_audio)
-                with st.spinner("Transcribing your answer..."):
-                    answer_text = extract_audio_bytes(
-                        answer_audio.getbuffer(), answer_audio.name, model=DEFAULT_MODEL
-                    )
             if not answer_text.strip():
                 st.warning("Record or paste an answer first.")
                 return

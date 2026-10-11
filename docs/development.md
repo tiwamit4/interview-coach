@@ -184,3 +184,26 @@ database cleanup, provider retries, input/output budgets, and persistent session
 `.github/workflows/tests.yml` runs the suite on Python 3.12 on Windows and Linux
 for every GitHub push and pull request. The workflow becomes active when this
 project is committed and pushed to a GitHub repository.
+
+## Live Recorder Browser Checks
+
+The recorder frontend lives in `streamlit_ui/live_recorder/` and uses browser
+MediaRecorder, Web Audio, and speech recognition APIs. There is no frontend build
+step or CDN dependency. Python validates returned audio before final transcription.
+The normal unit suite tests decoding limits, transcript caching, corrections,
+stale-answer prevention, and transcription retries.
+
+Optional browser checks use Playwright with a fake microphone and mocked speech
+results. They verify live interim/final transcript updates before recording stops,
+audio transfer through iframe messages, missing recognition support, and recognition
+errors. They do not assess an actual speech provider's accuracy.
+
+```bash
+python -m pip install playwright
+python -m playwright install chromium
+python tests/browser_live_recorder.py
+```
+
+To use an installed compatible browser instead, set `INTERVIEW_BROWSER_EXECUTABLE`
+to its executable path. Manually test real microphone recognition in your target
+browser before deployment.

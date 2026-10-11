@@ -7,7 +7,7 @@ FastAPI, Streamlit, Groq, and SQLite.
 
 - Generate questions and interview preparation plans.
 - Compare resume fit, improve resume bullets, and draft application messages.
-- Practice spoken or written answers with a scoring rubric and quoted feedback.
+- Record answers with a live transcript preview, then review the final text before scoring.
 - Save interview sessions with answer-based follow-up questions and resumable progress.
 - Track score trends, recurring feedback, and topics needing practice.
 - Download results as Markdown, PDF, or JSON where supported.

@@ -5,10 +5,13 @@ import re
 import streamlit as st
 
 from services import sessions
-from services.extraction import extract_audio_bytes
 from streamlit_ui.components import render_voice_evaluation, render_evaluation_rubric
 from streamlit_ui.helpers import show_error
-from streamlit_ui.recorder import record_live_audio
+from streamlit_ui.recorder import (
+    record_live_audio,
+    recording_active,
+    review_recorded_answer,
+)
 
 
 def render_sessions_tab():
@@ -123,14 +126,16 @@ def render_sessions_tab():
                 audio = record_live_audio(
                     "Record your answer", key=f"session_audio_{selected}_{index}"
                 )
+                answer = review_recorded_answer(
+                    audio, key=f"session_audio_{selected}_{index}"
+                )
             if st.button(
                 "Submit Answer",
                 type="primary",
                 key=f"submit_session_{selected}_{index}",
+                disabled=mode == "Record speech"
+                and recording_active(f"session_audio_{selected}_{index}"),
             ):
-                if audio:
-                    with st.spinner("Transcribing your answer..."):
-                        answer = extract_audio_bytes(audio.getbuffer(), audio.name)
                 if not answer.strip():
                     st.warning("Record or paste an answer first.")
                     return
