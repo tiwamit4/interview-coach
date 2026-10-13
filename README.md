@@ -1,7 +1,7 @@
 # Interview Coach
 
 Prepare for interviews using your resume and a job description. Built with
-FastAPI, Streamlit, Groq, and SQLite.
+FastAPI, Bun + React, Groq, and SQLite. The original Streamlit UI is also available.
 
 ## Features
 
@@ -16,7 +16,8 @@ FastAPI, Streamlit, Groq, and SQLite.
 
 ```text
 streamlit_app.py   Streamlit launcher
-frontend/         UI tabs, components, exports, and live recorder
+frontend/web/     Bun + React frontend
+frontend/streamlit_ui/  Original Streamlit UI
 backend/    FastAPI entry point, routes, shared services, models, config, and CLI
 tests/     API, service, UI, and optional browser checks
 docs/      Usage, API, configuration, and development guides
@@ -25,9 +26,30 @@ data/      Local generated output and SQLite history (ignored by Git)
 
 The Streamlit frontend imports shared backend services directly; it can run
 without the API server. Run launch and test commands from the repository root.
-The root `requirements.txt` installs both packages' dependency lists.
+The root `requirements.txt` installs the Python backend and Streamlit dependencies.
+The Bun frontend has its own `package.json` and `bun.lock`.
 
-## Quick Start
+## Bun Frontend
+
+Start FastAPI from the project root:
+
+```powershell
+python -m pip install -r backend/requirements.txt
+python -m uvicorn backend.api:app --reload
+```
+
+Set your Groq key in the root `.env`. In another terminal:
+
+```powershell
+cd frontend/web
+bun install
+bun run dev
+```
+
+Open http://localhost:5173. See [Bun frontend guide](frontend/web/README.md) for
+production builds, tests, Docker, and configuration.
+
+## Streamlit Setup
 
 Use Python 3.12 and run these commands from the `interview-coach` project folder.
 
@@ -76,9 +98,16 @@ docker compose up --build -d --wait
 docker compose logs -f
 ```
 
-The UI uses port 8501 and the API uses port 8000. Saved data persists in the
-shared Docker volume. `docker compose down` stops services and keeps saved data;
-adding `-v` deletes it.
+The default stack starts Bun on http://localhost:3000 and FastAPI on
+http://localhost:8000. To also start the preserved Streamlit UI on port 8501:
+
+```powershell
+docker compose --profile streamlit up --build -d --wait
+```
+
+View logs with `docker compose logs -f`. Stop services while keeping data with
+`docker compose --profile streamlit down`. Saved data persists in the shared Docker
+volume; adding `-v` to `down` deletes it.
 
 ## Configuration and Tests
 

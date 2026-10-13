@@ -86,7 +86,11 @@ class ApiTests(unittest.TestCase):
         for source, data, files in (
             ("text", {"text": "Resume text"}, {}),
             ("jd", {"jd_url": "https://example.com/job"}, {}),
-            ("resume", {}, {"resume": ("backend.resume.pdf", b"mock PDF", "application/pdf")}),
+            (
+                "resume",
+                {},
+                {"resume": ("backend.resume.pdf", b"mock PDF", "application/pdf")},
+            ),
             (
                 "jd_resume",
                 {"jd_url": "https://example.com/job"},
@@ -156,6 +160,28 @@ class ApiTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200, response.text)
 
+    def test_public_ui_config_exposes_limits_without_credentials(self):
+        from backend import config
+
+        with patch.object(config, "MAX_AUDIO_UPLOAD_BYTES", 12345):
+            response = self.client.get("/ui-config")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["max_audio_upload_bytes"], 12345)
+        self.assertEqual(
+            set(response.json()),
+            {
+                "max_resume_upload_bytes",
+                "max_audio_upload_bytes",
+                "recording_silence_seconds",
+                "recording_max_seconds",
+                "recording_start_timeout_seconds",
+                "recording_energy_threshold",
+                "live_transcription_language",
+                "max_session_questions",
+                "max_session_answer_characters",
+            },
+        )
+
     def test_voice_tasks_and_temporary_file_cleanup(self):
         response = self.client.post(
             "/voice/run",
@@ -199,7 +225,8 @@ class ApiTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertEqual(self.client.post(path, data=data).status_code, 400)
         response = self.client.post(
-            "/questions", files={"resume": ("backend.resume.txt", b"text", "text/plain")}
+            "/questions",
+            files={"resume": ("backend.resume.txt", b"text", "text/plain")},
         )
         self.assertEqual(response.status_code, 400)
         with patch.object(

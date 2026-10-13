@@ -297,3 +297,11 @@ incorrect totals, and malformed outputs return `502` before saving. Validation
 errors do not echo the submitted answer or rejected quotes. Quote matching does
 not establish the truth of the candidate's claims. See the
 [rubric guide](usage.md#grounded-answer-feedback) for score anchors and legacy behavior.
+
+## Browser UI Configuration
+
+`GET /ui-config` exposes public upload limits, recording duration/silence settings,
+browser preview language, and session input limits. The Bun frontend reads these
+settings instead of duplicating Python configuration. The response contains no
+API keys, database paths, or other private configuration. The existing endpoint
+contracts remain unchanged; the new browser frontend uses them through `/api`.

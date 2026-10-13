@@ -4,51 +4,43 @@
 
 ## Docker
 
-Requires Docker Engine and Docker Compose. If you do not already have a `.env`
-file, copy `.env.example` to `.env` and set `GROQ_API_KEY` to your Groq API key.
-Your existing `.env` can be used as-is.
+Requires Docker Engine and Docker Compose. Set `GROQ_API_KEY` in the root `.env`,
+then build and start the default Bun + FastAPI stack:
 
-Build and start both services:
-
-```bash
+```powershell
 docker compose up --build -d --wait
 ```
 
-- Streamlit UI: http://localhost:8501
+- Bun frontend: http://localhost:3000
 - API docs: http://localhost:8000/docs
-- API health: http://localhost:8000/health
+- API health through Bun: http://localhost:3000/api/health
 
-The services bind to localhost. Both run as a non-root user and share the
-`app-data` Docker volume for generated files and SQLite history. Existing files
-in your local `data/` directory are not imported automatically. Upload resumes
-through the UI or API; local resumes, generated output, and `.env` are excluded
-from the image. Compose passes the API key at runtime.
+Streamlit is optional. To start it as well on port 8501:
 
-The UI calls the application helpers directly, so either service can also run
-independently:
-
-```bash
-docker compose up --build -d ui
-docker compose up --build -d api
+```powershell
+docker compose --profile streamlit up --build -d --wait
 ```
 
-View status and logs:
+Stop any local process using port 8501 before enabling that profile. Bun connects
+to FastAPI over the internal Compose network and exposes a same-origin `/api`
+proxy to the browser. Ports bind to localhost. All three image targets run as
+non-root users, and the API image does not install Streamlit.
 
-```bash
+API and optional Streamlit share the `app-data` Docker volume for generated files
+and SQLite history. The Bun container stores no application data. Existing files
+in your local `data/` directory are not imported automatically. Source `.env`,
+local uploads, recordings, and generated data are excluded from images. Compose
+passes API keys only to Python containers at runtime.
+
+```powershell
 docker compose ps
-docker compose logs -f
+docker compose logs -f api web
+docker compose --profile streamlit down
 ```
 
-Stop the services while keeping saved data:
-
-```bash
-docker compose down
-```
-
-`docker compose down -v` also deletes the saved data volume. Health checks verify
-that each server responds; they do not check Groq credentials or model access.
-Browser audio recording works on localhost; remote microphone access requires
-HTTPS.
+Stopping preserves the data volume; `down -v` deletes it. Health checks verify
+server availability without contacting Groq or checking its credentials. Browser
+recording works on localhost; remote microphone access requires HTTPS.
 
 ## Error Handling
 
@@ -220,3 +212,49 @@ python -m backend.voice.groq_voice_text
 
 `data/`, `upload/`, and `.env` remain at the repository root. The configured voice
 sample path now resolves inside `backend/voice/`. Existing local data is retained.
+
+## Bun + React Frontend
+
+The new browser app is in `frontend/web/`. It calls FastAPI over HTTP through a
+same-origin `/api` proxy. Vite handles development and a small Bun server handles
+production static files and proxying. The Streamlit UI remains available unchanged.
+The proxy allows long model requests to complete; backend SDK timeouts still apply.
+API keys are read only by Python. UI upload/recording limits are read from `/ui-config`.
+
+See [the Bun frontend guide](../frontend/web/README.md) for setup, production,
+Docker, and tests. The root Compose file starts `web` on port 3000 and API on port 8000.
+The `streamlit` profile adds the preserved UI on port 8501. Frontend package versions are pinned in `bun.lock`.
+
+Run the optional full-app browser checks after a production build:
+
+```powershell
+python -m pip install playwright
+python -m playwright install chromium
+python tests/browser_bun_frontend.py
+```
+
+Bun must be on PATH (or set `INTERVIEW_BUN_EXECUTABLE`). For an installed compatible
+browser, set `INTERVIEW_BROWSER_EXECUTABLE`. Checks use isolated temporary database
+state and mock generation, recording recognition, and transcription responses.
+They exercise all workflows, voice corrections, session progression, charts,
+history, downloads, mobile navigation, and console errors without Groq requests.
+
+
+## Docker Targets and Startup
+
+The root Dockerfile builds a backend-only `api` target and a `streamlit` target
+that adds the Python UI. `frontend/web/Dockerfile` builds the React assets with
+Bun, then serves them from a smaller Bun runtime image. All services run as
+non-root users. The API and optional Streamlit UI share the named `app-data`
+volume; source `.env`, uploads, recordings, and generated files are excluded
+from build contexts. Compose injects the configured Groq key only into Python.
+
+```powershell
+docker compose up --build -d --wait
+docker compose --profile streamlit up --build -d --wait
+docker compose --profile streamlit down
+```
+
+The first command starts Bun and FastAPI. The second additionally starts Streamlit.
+Bun waits for the API health check before starting. Health checks verify server
+availability and do not consume Groq credits or validate provider credentials.

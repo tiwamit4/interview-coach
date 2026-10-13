@@ -62,3 +62,8 @@ Thumbs.db
 
 # Local-only GitHub Actions workflows
 /.github/workflows/
+
+# Bun frontend dependencies and build output
+node_modules/
+/frontend/web/dist/
+*.tsbuildinfo

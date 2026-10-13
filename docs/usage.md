@@ -2,6 +2,13 @@
 
 [Back to README](../README.md)
 
+## Choose a Frontend
+
+The Bun + React interface covers the interview workflows at http://localhost:5173
+in development or http://localhost:3000 in production/Docker. Start with the
+[Bun frontend guide](../frontend/web/README.md). The original Streamlit app remains
+available at port 8501; its workflow details follow below.
+
 ## Streamlit App
 
 The Streamlit UI is the easiest way to use the project. After completing local
