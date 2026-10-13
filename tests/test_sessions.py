@@ -10,12 +10,12 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 from streamlit.testing.v1 import AppTest
 
-import config
-from api import app
-from errors import GeneratedResultError, SessionConflictError
-from prompts.prompt import VOICE_ANSWER_EVALUATION_PROMPT
+from backend import config
+from backend.api import app
+from backend.errors import GeneratedResultError, SessionConflictError
+from backend.prompts.prompt import VOICE_ANSWER_EVALUATION_PROMPT
 from result_fixtures import result_for_prompt
-from services import sessions
+from backend.services import sessions
 
 
 class SessionTests(unittest.TestCase):
@@ -136,7 +136,7 @@ class SessionTests(unittest.TestCase):
 
     def test_streamlit_creates_session_and_advances_questions(self):
         app_test = AppTest.from_string(
-            "from streamlit_ui.tabs.sessions import render_sessions_tab\nrender_sessions_tab()"
+            "from frontend.streamlit_ui.tabs.sessions import render_sessions_tab\nrender_sessions_tab()"
         ).run()
         app_test.text_area[0].set_value("First question\nSecond question")
         app_test.checkbox[0].uncheck()

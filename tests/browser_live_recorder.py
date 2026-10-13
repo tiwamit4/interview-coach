@@ -48,7 +48,7 @@ window.webkitSpeechRecognition = undefined;
 def run():
     server = ThreadingHTTPServer(
         ("127.0.0.1", 0),
-        partial(Handler, directory=str(ROOT / "streamlit_ui/live_recorder")),
+        partial(Handler, directory=str(ROOT / "frontend/streamlit_ui/live_recorder")),
     )
     thread = Thread(target=server.serve_forever, daemon=True)
     thread.start()

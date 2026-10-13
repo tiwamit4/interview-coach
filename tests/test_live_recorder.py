@@ -6,16 +6,16 @@ from unittest.mock import patch
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from prompts.prompt import VOICE_ANSWER_EVALUATION_PROMPT
+from backend.prompts.prompt import VOICE_ANSWER_EVALUATION_PROMPT
 from result_fixtures import response_for_prompt, result_for_prompt
-from services import generation, sessions
-from streamlit_ui.tabs import voice_practice
+from backend.services import generation, sessions
+from frontend.streamlit_ui.tabs import voice_practice
 
 from streamlit.testing.v1 import AppTest
 
-import config
-from errors import GroqServiceError, UploadTooLargeError
-from streamlit_ui import recorder
+from backend import config
+from backend.errors import GroqServiceError, UploadTooLargeError
+from frontend.streamlit_ui import recorder
 
 
 class LiveRecorderTests(unittest.TestCase):
@@ -28,7 +28,7 @@ class LiveRecorderTests(unittest.TestCase):
 
     def app(self):
         return AppTest.from_string(
-            "from streamlit_ui.recorder import record_live_audio, review_recorded_answer, recording_active\n"
+            "from frontend.streamlit_ui.recorder import record_live_audio, review_recorded_answer, recording_active\n"
             "import streamlit as st\n"
             "audio = record_live_audio('Record', key='test')\n"
             "text = review_recorded_answer(audio, key='test')\n"
@@ -151,7 +151,7 @@ class LiveRecorderTests(unittest.TestCase):
             voice_practice, "save_history"
         ):
             ui = AppTest.from_string(
-                "from streamlit_ui.tabs.voice_practice import render_voice_practice_tab\nrender_voice_practice_tab()",
+                "from frontend.streamlit_ui.tabs.voice_practice import render_voice_practice_tab\nrender_voice_practice_tab()",
                 default_timeout=10,
             ).run()
             ui.text_area[0].set_value("Describe your project")
@@ -178,7 +178,7 @@ class LiveRecorderTests(unittest.TestCase):
                 "Voice practice", ["Describe your project"]
             )
             ui = AppTest.from_string(
-                "from streamlit_ui.tabs.sessions import render_sessions_tab\nrender_sessions_tab()",
+                "from frontend.streamlit_ui.tabs.sessions import render_sessions_tab\nrender_sessions_tab()",
                 default_timeout=10,
             ).run()
             ui.radio[0].set_value("Record speech").run()

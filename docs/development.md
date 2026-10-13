@@ -126,7 +126,7 @@ and raw exception messages are excluded from application log records. Unexpected
 API errors return a generic JSON `500` response while diagnostic locations are
 logged.
 
-Keep `LOG_LEVEL = "INFO"` in `config.py` to see completed API requests, upload
+Keep `LOG_LEVEL = "INFO"` in `backend/config.py` to see completed API requests, upload
 sizes, extraction and generation progress, validation, and saved output paths.
 Set it to `"WARNING"` to show only warnings and errors. With Docker, follow the
 terminal logs using `docker compose logs -f`.
@@ -134,37 +134,30 @@ terminal logs using `docker compose logs -f`.
 ## Project Structure
 
 ```text
-api.py                     FastAPI app and router registration
-api_backend/schemas.py     API request models
-api_backend/helpers.py     FastAPI upload and output adapters
-api_backend/exceptions.py  Service error to HTTP error mapping
-api_backend/routes/        Questions, workflows, voice, extraction, analysis, history, sessions, health
-streamlit_app.py           Streamlit launcher
-services/extraction.py     Shared job description, resume, and audio extraction
-services/generation.py     Shared question generation, prompts, and JSON parsing
-services/result_models.py  Pydantic contracts, rubric arithmetic, and exact-answer evidence validation
-services/files.py          Shared filenames and text/JSON file saving
-services/uploads.py        Shared upload validation and bounded reads
-services/sessions.py       Persistent interview sessions and answer progression
-services/progress.py       Shared score trends, feedback grouping, and practice priorities
-services/session_models.py Session request validation
-utils/database.py          SQLite transactions, WAL, busy timeouts, and cleanup
-utils/http_client.py       Scraping timeouts and GET retries
-api_backend/middleware.py  Request correlation and failure logging
-utils/logging_utils.py     JSON application logs
-streamlit_ui/              Streamlit UI, components, theme, and exports
-streamlit_ui/tabs/         Individual feature modules and stable tab exports
-streamlit_ui/helpers.py    Streamlit validation and error adapters
-jd/extract_text.py         Job description extraction
-resume/extract_text.py     Resume PDF extraction
-voice/groq_voice_text.py   Speech-to-text helpers
-utils/groq_service.py      Groq chat helper
-utils/history.py           SQLite history helper
-prompts/prompt.py          Prompt templates
-scrap/web_search.py        Reusable Serper web search helper
-streamlit_ui/exports.py    Markdown and PDF export helpers
-config.py                  Models, generation, output paths, history, and recording settings
-tests/                     API, shared service, and Streamlit workflow checks
+backend/
+  api.py                   FastAPI app and router registration
+  api_backend/             HTTP routes, request models, middleware, and adapters
+  services/                Shared extraction, generation, validation, sessions, and progress
+  utils/                   Database, history, HTTP, Groq, uploads, and logs
+  jd/  resume/  voice/      Job description, resume, and speech extraction
+  prompts/                 Prompt templates
+  scrap/                   Optional Serper web search helper
+  config.py                Shared models, paths, limits, and recording settings
+  errors.py                Application errors
+  main.py                  Standalone document workflow
+  requirements.txt         Backend dependencies
+frontend/
+  streamlit_app.py          Streamlit launcher
+  streamlit_ui/            Feature tabs, components, theme, exports, and recorder
+    live_recorder/         Browser recording assets; no build step required
+  requirements.txt         Streamlit dependency
+tests/                     Integration, service, UI, and optional browser checks
+docs/                      Detailed guides
+requirements.txt           Installs frontend and backend dependencies
+requirements-dev.txt       Development/test dependencies
+.env.example               Safe API-key placeholder for local setup
+Dockerfile  compose.yaml   Shared image and service launch configuration
+data/                      Generated files and SQLite history (ignored by Git)
 ```
 
 ## Automated Tests
@@ -187,7 +180,7 @@ project is committed and pushed to a GitHub repository.
 
 ## Live Recorder Browser Checks
 
-The recorder frontend lives in `streamlit_ui/live_recorder/` and uses browser
+The recorder frontend lives in `frontend/streamlit_ui/live_recorder/` and uses browser
 MediaRecorder, Web Audio, and speech recognition APIs. There is no frontend build
 step or CDN dependency. Python validates returned audio before final transcription.
 The normal unit suite tests decoding limits, transcript caching, corrections,
@@ -207,3 +200,23 @@ python tests/browser_live_recorder.py
 To use an installed compatible browser instead, set `INTERVIEW_BROWSER_EXECUTABLE`
 to its executable path. Manually test real microphone recognition in your target
 browser before deployment.
+
+
+## Package Boundaries
+
+Backend code uses explicit `backend.*` imports and does not import the frontend.
+Frontend code uses `frontend.streamlit_ui.*` for presentation and `backend.*` for
+shared services. Streamlit still calls those services in-process; this directory
+split does not require HTTP calls or a frontend framework migration.
+
+Run from the repository root:
+
+```bash
+python -m uvicorn backend.api:app --reload
+python -m streamlit run frontend/streamlit_app.py
+python -m backend.main
+python -m backend.voice.groq_voice_text
+```
+
+`data/`, `upload/`, and `.env` remain at the repository root. The configured voice
+sample path now resolves inside `backend/voice/`. Existing local data is retained.

@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-from api import app
-from api_backend.routes import (
+from backend.api import app
+from backend.api_backend.routes import (
     analysis,
     extraction,
     history,
@@ -16,9 +16,9 @@ from api_backend.routes import (
     voice,
     workflows,
 )
-from errors import GroqServiceError
-from services import extraction as extraction_service, generation
-from prompts.prompt import VOICE_ANSWER_EVALUATION_PROMPT
+from backend.errors import GroqServiceError
+from backend.services import extraction as extraction_service, generation
+from backend.prompts.prompt import VOICE_ANSWER_EVALUATION_PROMPT
 from result_fixtures import response_for_prompt, result_for_prompt
 
 
@@ -67,7 +67,7 @@ class ApiTests(unittest.TestCase):
                 "save_output": "false",
                 **data,
             },
-            files={"resume": ("resume.pdf", b"mock PDF", "application/pdf")},
+            files={"resume": ("backend.resume.pdf", b"mock PDF", "application/pdf")},
         )
 
     def test_health_and_history(self):
@@ -86,11 +86,11 @@ class ApiTests(unittest.TestCase):
         for source, data, files in (
             ("text", {"text": "Resume text"}, {}),
             ("jd", {"jd_url": "https://example.com/job"}, {}),
-            ("resume", {}, {"resume": ("resume.pdf", b"mock PDF", "application/pdf")}),
+            ("resume", {}, {"resume": ("backend.resume.pdf", b"mock PDF", "application/pdf")}),
             (
                 "jd_resume",
                 {"jd_url": "https://example.com/job"},
-                {"resume": ("resume.pdf", b"mock PDF", "application/pdf")},
+                {"resume": ("backend.resume.pdf", b"mock PDF", "application/pdf")},
             ),
         ):
             with self.subTest(source=source):
@@ -152,7 +152,7 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200, response.text)
         response = self.client.post(
             "/resume/questions?save_output=false",
-            files={"file": ("resume.pdf", b"mock PDF", "application/pdf")},
+            files={"file": ("backend.resume.pdf", b"mock PDF", "application/pdf")},
         )
         self.assertEqual(response.status_code, 200, response.text)
 
@@ -199,7 +199,7 @@ class ApiTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertEqual(self.client.post(path, data=data).status_code, 400)
         response = self.client.post(
-            "/questions", files={"resume": ("resume.txt", b"text", "text/plain")}
+            "/questions", files={"resume": ("backend.resume.txt", b"text", "text/plain")}
         )
         self.assertEqual(response.status_code, 400)
         with patch.object(

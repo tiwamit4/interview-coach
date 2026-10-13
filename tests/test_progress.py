@@ -10,13 +10,13 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 from streamlit.testing.v1 import AppTest
 
-import config
-from api import app
-from prompts.prompt import VOICE_ANSWER_EVALUATION_PROMPT
+from backend import config
+from backend.api import app
+from backend.prompts.prompt import VOICE_ANSWER_EVALUATION_PROMPT
 from result_fixtures import result_for_prompt
-from services import sessions
-from services.progress import get_progress
-from utils.database import connection
+from backend.services import sessions
+from backend.services.progress import get_progress
+from backend.utils.database import connection
 
 
 class ProgressTests(unittest.TestCase):
@@ -180,7 +180,7 @@ class ProgressTests(unittest.TestCase):
 
     def test_ui_empty_state_and_saved_progress_filters(self):
         ui = AppTest.from_string(
-            "from streamlit_ui.tabs.progress import render_progress_tab\nrender_progress_tab()",
+            "from frontend.streamlit_ui.tabs.progress import render_progress_tab\nrender_progress_tab()",
             default_timeout=10,
         ).run()
         self.assertFalse(ui.exception)

@@ -7,11 +7,11 @@ from unittest.mock import patch
 
 from streamlit.testing.v1 import AppTest
 
-import config
+from backend import config
 from result_fixtures import response_for_prompt
-from services import extraction, generation, sessions
-from services import progress
-from streamlit_ui.tabs import (
+from backend.services import extraction, generation, sessions
+from backend.services import progress
+from frontend.streamlit_ui.tabs import (
     analysis,
     applications,
     history,
@@ -64,7 +64,7 @@ class StreamlitTests(unittest.TestCase):
         )
 
     def test_main_app_renders_existing_tabs(self):
-        app = AppTest.from_file("streamlit_app.py").run()
+        app = AppTest.from_file("frontend/streamlit_app.py").run()
         self.assertFalse(app.exception)
         self.assertEqual(
             [tab.label for tab in app.tabs],
@@ -83,12 +83,12 @@ class StreamlitTests(unittest.TestCase):
 
     def test_oversized_ui_resume_shows_error_before_extraction(self):
         upload = BytesIO(b"12345")
-        upload.name = "resume.pdf"
+        upload.name = "backend.resume.pdf"
         with patch.object(config, "MAX_RESUME_UPLOAD_BYTES", 4), patch(
             "streamlit.file_uploader", return_value=upload
         ):
             app = AppTest.from_string(
-                "from streamlit_ui.tabs.questions import render_jd_resume_questions_tab\nrender_jd_resume_questions_tab()"
+                "from frontend.streamlit_ui.tabs.questions import render_jd_resume_questions_tab\nrender_jd_resume_questions_tab()"
             ).run()
             app.button[0].click().run()
             self.assertFalse(app.exception)
@@ -99,14 +99,14 @@ class StreamlitTests(unittest.TestCase):
 
     def test_invalid_ai_output_shows_error_before_rendering_or_saving(self):
         upload = BytesIO(b"mock PDF")
-        upload.name = "resume.pdf"
+        upload.name = "backend.resume.pdf"
         with patch("streamlit.file_uploader", return_value=upload), patch.object(
             generation, "groq_prompt_call", return_value='{"role_fit_score": 200}'
         ), patch.object(match, "render_match_analysis") as render, patch.object(
             match, "write_json_file"
         ) as write:
             app = AppTest.from_string(
-                "from streamlit_ui.tabs.match import render_match_score_tab\nrender_match_score_tab()"
+                "from frontend.streamlit_ui.tabs.match import render_match_score_tab\nrender_match_score_tab()"
             ).run()
             app.button[0].click().run()
             self.assertFalse(app.exception)
@@ -119,7 +119,7 @@ class StreamlitTests(unittest.TestCase):
 
     def test_document_feature_flows(self):
         upload = BytesIO(b"mock PDF")
-        upload.name = "resume.pdf"
+        upload.name = "backend.resume.pdf"
         features = (
             ("job_description", "render_jd_tab"),
             ("resume_pdf", "render_resume_pdf_tab"),
@@ -136,7 +136,7 @@ class StreamlitTests(unittest.TestCase):
             for module, function in features:
                 with self.subTest(feature=module):
                     app = AppTest.from_string(
-                        f"from streamlit_ui.tabs.{module} import {function}\n{function}()"
+                        f"from frontend.streamlit_ui.tabs.{module} import {function}\n{function}()"
                     ).run()
                     self.assertFalse(app.exception)
                     if module == "resume_text":
@@ -156,7 +156,7 @@ class StreamlitTests(unittest.TestCase):
         audio.name = "answer.wav"
         with patch.object(voice_practice, "record_live_audio", return_value=audio):
             app = AppTest.from_string(
-                "from streamlit_ui.tabs.voice_practice import render_voice_practice_tab\nrender_voice_practice_tab()"
+                "from frontend.streamlit_ui.tabs.voice_practice import render_voice_practice_tab\nrender_voice_practice_tab()"
             ).run()
             app.text_area[0].set_value("Tell me about yourself")
             app.checkbox[0].uncheck()
@@ -166,7 +166,7 @@ class StreamlitTests(unittest.TestCase):
             self.assertTrue(app.metric)
         with patch("streamlit.file_uploader", return_value=audio):
             app = AppTest.from_string(
-                "from streamlit_ui.tabs.speech_to_text import render_voice_tab\nrender_voice_tab()"
+                "from frontend.streamlit_ui.tabs.speech_to_text import render_voice_tab\nrender_voice_tab()"
             ).run()
             app.checkbox(key="save_voice_transcript").uncheck()
             app.button[0].click().run()

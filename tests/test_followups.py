@@ -11,13 +11,13 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 from streamlit.testing.v1 import AppTest
 
-import config
-from api import app
-from errors import SessionConflictError
-from prompts.prompt import SESSION_FOLLOWUP_PROMPT, VOICE_ANSWER_EVALUATION_PROMPT
+from backend import config
+from backend.api import app
+from backend.errors import SessionConflictError
+from backend.prompts.prompt import SESSION_FOLLOWUP_PROMPT, VOICE_ANSWER_EVALUATION_PROMPT
 from result_fixtures import result_for_prompt
-from services import generation, sessions
-from utils.database import connection
+from backend.services import generation, sessions
+from backend.utils.database import connection
 
 
 class FollowUpTests(unittest.TestCase):
@@ -201,7 +201,7 @@ class FollowUpTests(unittest.TestCase):
 
     def test_streamlit_followup_label_and_completion(self):
         ui = AppTest.from_string(
-            "from streamlit_ui.tabs.sessions import render_sessions_tab\nrender_sessions_tab()",
+            "from frontend.streamlit_ui.tabs.sessions import render_sessions_tab\nrender_sessions_tab()",
             default_timeout=10,
         ).run()
         ui.text_area[0].set_value("First project")

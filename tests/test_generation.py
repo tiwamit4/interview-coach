@@ -4,11 +4,11 @@ import json
 import unittest
 from unittest.mock import patch
 
-from errors import ConfigurationError, GeneratedResultError
-from prompts.prompt import MATCH_SCORE_PROMPT, VOICE_ANSWER_EVALUATION_PROMPT
+from backend.errors import ConfigurationError, GeneratedResultError
+from backend.prompts.prompt import MATCH_SCORE_PROMPT, VOICE_ANSWER_EVALUATION_PROMPT
 from result_fixtures import RESULTS, result_for_prompt
-from services import generation
-from services.result_models import VoiceEvaluation
+from backend.services import generation
+from backend.services.result_models import VoiceEvaluation
 
 
 class GeneratedResultTests(unittest.TestCase):

@@ -12,13 +12,13 @@ from unittest.mock import Mock, patch
 import httpx
 from groq import Groq
 
-import config
+from backend import config
 import sqlite3
-from api import app
-from api_backend.routes import workflows
-from errors import GroqServiceError, InputTooLongError
-from utils import groq_service, history
-from utils.database import connection
+from backend.api import app
+from backend.api_backend.routes import workflows
+from backend.errors import GroqServiceError, InputTooLongError
+from backend.utils import groq_service, history
+from backend.utils.database import connection
 
 
 class ConcurrentApiTests(unittest.IsolatedAsyncioTestCase):

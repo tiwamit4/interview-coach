@@ -7,7 +7,7 @@
 Run the API from the project root with the virtual environment activated:
 
 ```bash
-python -m uvicorn api:app --reload
+python -m uvicorn backend.api:app --reload
 ```
 
 Open docs:
@@ -47,7 +47,7 @@ http://127.0.0.1:8000/docs
 If some older APIs appear in Swagger, they are compatibility endpoints. Prefer the primary APIs above.
 
 To hide compatibility APIs from Swagger, add `include_in_schema=False` to those
-route decorators in `api_backend/routes/`:
+route decorators in `backend/api_backend/routes/`:
 
 ```python
 @router.post("/jd/questions", deprecated=True, include_in_schema=False)
@@ -177,7 +177,7 @@ Transcribe audio:
 ```bash
 curl -X POST http://127.0.0.1:8000/voice/run \
   -F "task=transcribe" \
-  -F "audio=@voice/audio.m4a"
+  -F "audio=@backend/voice/audio.m4a"
 ```
 
 Evaluate pasted answer:
@@ -227,7 +227,7 @@ These endpoints still exist for compatibility, but `/run` and `/voice/run` are p
 POST /jd/questions
 POST /resume/questions
 POST /text/resume/questions
-POST /jd-resume/questions
+POST /jd-backend/resume/questions
 POST /analyze/jd-resume-match
 POST /prep/interview
 POST /generate/cover-letter

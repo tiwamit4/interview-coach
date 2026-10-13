@@ -9,14 +9,14 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 from streamlit.testing.v1 import AppTest
 
-import config
-from api import app
-from errors import GeneratedResultError
-from prompts.prompt import VOICE_ANSWER_EVALUATION_PROMPT
+from backend import config
+from backend.api import app
+from backend.errors import GeneratedResultError
+from backend.prompts.prompt import VOICE_ANSWER_EVALUATION_PROMPT
 from result_fixtures import result_for_prompt
-from services import generation, sessions
-from utils import history
-from streamlit_ui.exports import voice_evaluation_to_markdown
+from backend.services import generation, sessions
+from backend.utils import history
+from frontend.streamlit_ui.exports import voice_evaluation_to_markdown
 
 
 class GroundedFeedbackTests(unittest.TestCase):
@@ -192,12 +192,12 @@ class GroundedFeedbackTests(unittest.TestCase):
         markdown = voice_evaluation_to_markdown(result)
         self.assertIn("Relevance: 23/25", markdown)
         self.assertIn("> I tested it with 30 cases.", markdown)
-        with patch("streamlit_ui.components.render_markdown_pdf_downloads"), patch(
-            "streamlit_ui.components.render_json_download"
+        with patch("frontend.streamlit_ui.components.render_markdown_pdf_downloads"), patch(
+            "frontend.streamlit_ui.components.render_json_download"
         ):
             # Pass an ordinary dictionary through session state rather than a module fixture.
             ui = AppTest.from_string(
-                "import streamlit as st\nfrom streamlit_ui.components import render_voice_evaluation\nrender_voice_evaluation(st.session_state['result'])",
+                "import streamlit as st\nfrom frontend.streamlit_ui.components import render_voice_evaluation\nrender_voice_evaluation(st.session_state['result'])",
                 default_timeout=10,
             )
             ui.session_state["result"] = result

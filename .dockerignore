@@ -22,7 +22,7 @@ dist
 .streamlit/secrets.toml
 data
 upload
-voice/audio.*
+backend/voice/audio.*
 .vscode
 .idea
 .DS_Store

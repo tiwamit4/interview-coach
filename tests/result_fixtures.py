@@ -3,7 +3,7 @@
 from copy import deepcopy
 import json
 
-from prompts.prompt import (
+from backend.prompts.prompt import (
     COVER_LETTER_PROMPT,
     INTERVIEW_PREP_PROMPT,
     MATCH_SCORE_PROMPT,

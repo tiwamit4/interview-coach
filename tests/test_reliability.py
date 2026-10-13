@@ -12,14 +12,14 @@ from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
 
-import config
-from api import app
-from api_backend.routes import history, workflows
-from errors import UploadTooLargeError
+from backend import config
+from backend.api import app
+from backend.api_backend.routes import history, workflows
+from backend.errors import UploadTooLargeError
 from result_fixtures import response_for_prompt
-from services import extraction, files, generation
-from services.uploads import read_upload
-from utils import logging_utils
+from backend.services import extraction, files, generation
+from backend.services.uploads import read_upload
+from backend.utils import logging_utils
 
 
 class UploadReadTests(unittest.IsolatedAsyncioTestCase):
@@ -108,7 +108,7 @@ class FileReliabilityTests(unittest.TestCase):
                 response = TestClient(app).post(
                     "/run",
                     data={"task": "match_score", "jd_url": "https://example.com/job"},
-                    files={"resume": ("resume.pdf", b"PDF", "application/pdf")},
+                    files={"resume": ("backend.resume.pdf", b"PDF", "application/pdf")},
                 )
                 self.assertEqual(response.status_code, 200, response.text)
                 result = response.json()
@@ -144,7 +144,7 @@ class ReliabilityIntegrationTests(unittest.TestCase):
                     response = TestClient(app).post(
                         path,
                         data={"jd_url": "https://example.com/job", **data},
-                        files={field: ("resume.pdf", b"12345", "application/pdf")},
+                        files={field: ("backend.resume.pdf", b"12345", "application/pdf")},
                     )
                     self.assertEqual(response.status_code, 413, response.text)
                     self.assertIn("too large", response.json()["detail"])

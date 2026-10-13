@@ -4,7 +4,7 @@
 
 ## Application Configuration
 
-Edit `config.py` before starting the API or UI, and restart the services after
+Edit `backend/config.py` before starting the API or UI, and restart the services after
 changing settings. API keys remain in `.env`.
 
 | Settings | Purpose |
@@ -42,7 +42,7 @@ existing files.
 
 ### Speech-to-Text
 
-The standalone voice script reads its settings from `config.py`; no command-line
+The standalone voice script reads its settings from `backend/config.py`; no command-line
 arguments are needed. Set `VOICE_AUDIO_PATH` to your audio file and adjust
 `VOICE_MODEL`, `VOICE_LANGUAGE`, `VOICE_PROMPT`, `VOICE_RESPONSE_FORMAT`, and
 `VOICE_TEMPERATURE` as needed. Set `VOICE_TRANSLATE = True` to translate speech
@@ -51,7 +51,7 @@ to English.
 Run from the project root:
 
 ```bash
-python -m voice.groq_voice_text
+python -m backend.voice.groq_voice_text
 ```
 
 These voice defaults also apply to the API and UI helpers. The UI can override

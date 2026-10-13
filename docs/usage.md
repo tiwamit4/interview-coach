@@ -9,7 +9,7 @@ setup, activate the virtual environment before using the commands below. On
 Windows, you can instead use `.\.venv\Scripts\python.exe` in place of `python`.
 
 ```bash
-python -m streamlit run streamlit_app.py
+python -m streamlit run frontend/streamlit_app.py
 ```
 
 Open:
@@ -21,7 +21,7 @@ http://localhost:8501
 If the port is busy:
 
 ```bash
-python -m streamlit run streamlit_app.py --server.port 8502
+python -m streamlit run frontend/streamlit_app.py --server.port 8502
 ```
 
 ### Streamlit Workflows
@@ -187,7 +187,7 @@ optional role context, then click `Start Session`.
 answering a planned question, the app generates one focused question based on
 your answer and role context, then resumes the planned questions after you answer
 the follow-up. Follow-ups are labeled with their reason and saved with the session.
-They do not generate further follow-ups. `MAX_SESSION_FOLLOWUPS` in `config.py`
+They do not generate further follow-ups. `MAX_SESSION_FOLLOWUPS` in `backend/config.py`
 caps additions at 10 per session by default; the total question count may increase.
 Uncheck the option to practice only your planned questions. Existing sessions
 keep their original question sequence.
@@ -261,7 +261,7 @@ not included. The empty state explains how to start collecting progress.
 
 Grouping uses simple English phrase matching and may miss related wording or
 misclassify a topic. Review the original feedback before choosing what to practise.
-Configure thresholds and the comparison window in `config.py`.
+Configure thresholds and the comparison window in `backend/config.py`.
 
 ## Grounded Answer Feedback
 
@@ -317,7 +317,7 @@ Submission is disabled while the recorder is active.
 Default limits: 300 seconds per recording, 15 seconds to begin speaking, and
 600 ms of silence after speech begins. Audio size limits apply in the browser
 and on the server. You can change these settings and the browser preview language
-in `config.py`. `LIVE_TRANSCRIPTION_LANGUAGE` is a browser locale such as `en-US`
+in `backend/config.py`. `LIVE_TRANSCRIPTION_LANGUAGE` is a browser locale such as `en-US`
 or `hi-IN`; Groq's `VOICE_LANGUAGE` is configured separately.
 
 The browser requests mono audio at the configured sample rate, but the actual

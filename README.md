@@ -12,6 +12,20 @@ FastAPI, Streamlit, Groq, and SQLite.
 - Track score trends, recurring feedback, and topics needing practice.
 - Download results as Markdown, PDF, or JSON where supported.
 
+## Code Layout
+
+```text
+frontend/   Streamlit launcher, UI tabs, components, exports, and live recorder
+backend/    FastAPI entry point, routes, shared services, models, config, and CLI
+tests/     API, service, UI, and optional browser checks
+docs/      Usage, API, configuration, and development guides
+data/      Local generated output and SQLite history (ignored by Git)
+```
+
+The Streamlit frontend imports shared backend services directly; it can run
+without the API server. Run launch and test commands from the repository root.
+The root `requirements.txt` installs both packages' dependency lists.
+
 ## Quick Start
 
 Use Python 3.12 and run these commands from the `interview-coach` project folder.
@@ -22,7 +36,7 @@ Use Python 3.12 and run these commands from the `interview-coach` project folder
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 Copy-Item .env.example .env
-.\.venv\Scripts\python.exe -m streamlit run streamlit_app.py
+.\.venv\Scripts\python.exe -m streamlit run frontend/streamlit_app.py
 ```
 
 **macOS / Linux**
@@ -32,7 +46,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 cp .env.example .env
-python -m streamlit run streamlit_app.py
+python -m streamlit run frontend/streamlit_app.py
 ```
 
 Keep an existing `.env` instead of copying over it. Before starting Streamlit,
@@ -46,10 +60,10 @@ Open the UI at http://localhost:8501. The UI runs independently of the API.
 Start the API in another terminal:
 
 ```powershell
-.\.venv\Scripts\python.exe -m uvicorn api:app --reload
+.\.venv\Scripts\python.exe -m uvicorn backend.api:app --reload
 ```
 
-On macOS/Linux, use `python -m uvicorn api:app --reload` with the virtual
+On macOS/Linux, use `python -m uvicorn backend.api:app --reload` with the virtual
 environment activated. Open http://localhost:8000/docs for interactive API docs.
 
 ## Docker
@@ -67,7 +81,7 @@ adding `-v` deletes it.
 
 ## Configuration and Tests
 
-Edit [config.py](config.py) for model settings, upload limits, recording settings,
+Edit [backend/config.py](backend/config.py) for model settings, upload limits, recording settings,
 timeouts, and output paths; restart services after changes. Generated files and
 SQLite history/session data live in `data/`. Application logs appear in the
 terminal. Local secrets, uploads, and generated data are excluded from Git.

@@ -6,11 +6,11 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from api_backend import helpers as api_helpers
-from errors import GroqServiceError
-from services import extraction, files, generation
-from streamlit_ui import helpers as ui_helpers
-from prompts.prompt import VOICE_ANSWER_EVALUATION_PROMPT
+from backend.api_backend import helpers as api_helpers
+from backend.errors import GroqServiceError
+from backend.services import extraction, files, generation
+from frontend.streamlit_ui import helpers as ui_helpers
+from backend.prompts.prompt import VOICE_ANSWER_EVALUATION_PROMPT
 from result_fixtures import response_for_prompt, result_for_prompt
 
 
@@ -29,12 +29,12 @@ class SharedServiceTests(unittest.TestCase):
                     if failure:
                         with self.assertRaisesRegex(ValueError, "Broken PDF"):
                             extraction.extract_resume_bytes(
-                                b"PDF content", "resume.PDF"
+                                b"PDF content", "backend.resume.PDF"
                             )
                     else:
                         self.assertEqual(
                             extraction.extract_resume_bytes(
-                                b"PDF content", "resume.PDF"
+                                b"PDF content", "backend.resume.PDF"
                             ),
                             "Resume text",
                         )
@@ -42,7 +42,7 @@ class SharedServiceTests(unittest.TestCase):
 
     def test_invalid_resume_is_rejected_before_extraction(self):
         with patch.object(extraction, "read_pdf") as reader:
-            for filename in (None, "", "resume.txt"):
+            for filename in (None, "", "backend.resume.txt"):
                 with self.subTest(filename=filename), self.assertRaises(ValueError):
                     extraction.extract_resume_bytes(b"content", filename)
             reader.assert_not_called()
@@ -100,7 +100,7 @@ class SharedServiceTests(unittest.TestCase):
     def test_shared_file_writers_preserve_adapter_types_and_unicode(self):
         with TemporaryDirectory() as directory:
             content = "हिंदी résumé"
-            api_path = api_helpers.write_text_file(directory, "api.txt", content)
+            api_path = api_helpers.write_text_file(directory, "backend.api.txt", content)
             ui_path = ui_helpers.write_text_file(directory, "ui.txt", content)
             self.assertIsInstance(api_path, str)
             self.assertIsInstance(ui_path, Path)
