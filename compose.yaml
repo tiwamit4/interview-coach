@@ -1,5 +1,6 @@
 services:
   api:
+    container_name: interview-coach-backend
     build:
       context: .
       target: api
@@ -18,6 +19,7 @@ services:
       retries: 3
 
   ui:
+    container_name: interview-coach-streamlit
     profiles: [streamlit]
     build:
       context: .
@@ -47,6 +49,7 @@ services:
       retries: 3
 
   web:
+    container_name: interview-coach-frontend
     build:
       context: ./frontend/web
     ports:
