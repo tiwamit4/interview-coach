@@ -49,10 +49,13 @@ htmlcov/
 /logs/
 
 # Audio files used for local testing
-voice/audio.*
+backend/voice/audio.*
 
 # OS and editor files
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+
+/.env.example
+/requirements-dev.txt
