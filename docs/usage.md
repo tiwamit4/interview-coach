@@ -9,7 +9,7 @@ setup, activate the virtual environment before using the commands below. On
 Windows, you can instead use `.\.venv\Scripts\python.exe` in place of `python`.
 
 ```bash
-python -m streamlit run frontend/streamlit_app.py
+python -m streamlit run streamlit_app.py
 ```
 
 Open:
@@ -21,7 +21,7 @@ http://localhost:8501
 If the port is busy:
 
 ```bash
-python -m streamlit run frontend/streamlit_app.py --server.port 8502
+python -m streamlit run streamlit_app.py --server.port 8502
 ```
 
 ### Streamlit Workflows

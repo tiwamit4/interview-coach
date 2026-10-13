@@ -147,10 +147,10 @@ backend/
   main.py                  Standalone document workflow
   requirements.txt         Backend dependencies
 frontend/
-  streamlit_app.py          Streamlit launcher
   streamlit_ui/            Feature tabs, components, theme, exports, and recorder
     live_recorder/         Browser recording assets; no build step required
   requirements.txt         Streamlit dependency
+streamlit_app.py           Streamlit launcher
 tests/                     Integration, service, UI, and optional browser checks
 docs/                      Detailed guides
 requirements.txt           Installs frontend and backend dependencies
@@ -213,7 +213,7 @@ Run from the repository root:
 
 ```bash
 python -m uvicorn backend.api:app --reload
-python -m streamlit run frontend/streamlit_app.py
+python -m streamlit run streamlit_app.py
 python -m backend.main
 python -m backend.voice.groq_voice_text
 ```

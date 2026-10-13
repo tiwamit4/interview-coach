@@ -64,7 +64,7 @@ class StreamlitTests(unittest.TestCase):
         )
 
     def test_main_app_renders_existing_tabs(self):
-        app = AppTest.from_file("frontend/streamlit_app.py").run()
+        app = AppTest.from_file("streamlit_app.py").run()
         self.assertFalse(app.exception)
         self.assertEqual(
             [tab.label for tab in app.tabs],

@@ -15,7 +15,8 @@ FastAPI, Streamlit, Groq, and SQLite.
 ## Code Layout
 
 ```text
-frontend/   Streamlit launcher, UI tabs, components, exports, and live recorder
+streamlit_app.py   Streamlit launcher
+frontend/         UI tabs, components, exports, and live recorder
 backend/    FastAPI entry point, routes, shared services, models, config, and CLI
 tests/     API, service, UI, and optional browser checks
 docs/      Usage, API, configuration, and development guides
@@ -36,7 +37,7 @@ Use Python 3.12 and run these commands from the `interview-coach` project folder
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 Copy-Item .env.example .env
-.\.venv\Scripts\python.exe -m streamlit run frontend/streamlit_app.py
+.\.venv\Scripts\python.exe -m streamlit run streamlit_app.py
 ```
 
 **macOS / Linux**
@@ -46,7 +47,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 cp .env.example .env
-python -m streamlit run frontend/streamlit_app.py
+python -m streamlit run streamlit_app.py
 ```
 
 Keep an existing `.env` instead of copying over it. Before starting Streamlit,
