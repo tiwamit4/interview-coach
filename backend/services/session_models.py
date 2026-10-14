@@ -5,6 +5,7 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 from backend import config
+
 SessionText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 QuestionText = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=2000)
@@ -16,6 +17,9 @@ class SessionCreate(BaseModel):
     title: SessionText = Field(default="Interview practice", max_length=120)
     questions: list[QuestionText] = Field(
         min_length=1, max_length=config.MAX_SESSION_QUESTIONS
+    )
+    simulation_duration_minutes: int | None = Field(
+        default=None, ge=1, le=config.SIMULATION_MAX_MINUTES, strict=True
     )
     role_context: str = Field(default="", max_length=10000)
     followups_enabled: bool = Field(default=False, strict=True)

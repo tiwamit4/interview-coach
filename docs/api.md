@@ -305,3 +305,34 @@ browser preview language, and session input limits. The Bun frontend reads these
 settings instead of duplicating Python configuration. The response contains no
 API keys, database paths, or other private configuration. The existing endpoint
 contracts remain unchanged; the new browser frontend uses them through `/api`.
+
+
+## Timed Simulations
+
+Create with `POST /sessions` and optional `simulation_duration_minutes` integer
+(1 to `SIMULATION_MAX_MINUTES`, currently 120). Omit it or use `null` for untimed
+practice. Existing questions, role context, and follow-up settings apply.
+
+```json
+{"title":"Python interview","questions":["Describe a project.","How did you test it?"],"simulation_duration_minutes":20,"followups_enabled":true}
+```
+
+Session responses add nullable `simulation` and `report`. Simulation metadata
+contains `duration_minutes`, `deadline_at`, `finished_at`, `server_time`, and
+`remaining_seconds`. Ended simulations have status `completed` and no current
+question, including when unanswered questions remain. Session lists and progress
+recognize early finishes and expired deadlines.
+
+`POST /sessions/{id}/finish` ends a timed simulation early and returns its final
+session/report. Repeating it leaves saved answers and finish time unchanged.
+Missing sessions return 404; untimed sessions return 409. Normal answer endpoints
+remain unchanged. Answers admitted after expiry return 409 without an AI call;
+answers admitted before expiry may finish scoring afterward. Explicit early
+finish wins over an in-flight answer submission, which then returns 409.
+
+A final report includes `completion_reason` (`all_questions_answered`,
+`time_expired`, or `finished_early`), answered/unanswered counts, average score
+(or null), rubric averages out of 25, common strengths/practice priorities from
+saved feedback, and individual question scores. Unanswered questions are excluded
+from score averages. Reports require no extra generation. Feedback visibility
+is a UI choice; API responses continue to include saved evaluations.

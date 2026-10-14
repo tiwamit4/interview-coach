@@ -83,3 +83,9 @@ data/voice_practice/        Voice answer evaluations
 data/analysis/              Full analysis output
 data/history/               SQLite history database
 ```
+
+
+Timed interview simulation defaults live in `backend/config.py`:
+`SIMULATION_DEFAULT_MINUTES = 20`, `SIMULATION_MAX_MINUTES = 120`. The Bun
+frontend receives both through `/ui-config`. Deadlines and early finish timestamps
+are persisted in SQLite alongside sessions.

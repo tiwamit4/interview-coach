@@ -188,7 +188,14 @@ def get_progress(days=None, include_followups=True):
         "summary": {
             "sessions": len(relevant_sessions),
             "completed_sessions": sum(
-                row["current_index"] >= len(row["questions"])
+                (
+                    row["current_index"] >= len(row["questions"])
+                    or row.get("finished_at") is not None
+                    or (
+                        row.get("deadline_at") is not None
+                        and _timestamp(row["deadline_at"]) <= now
+                    )
+                )
                 for row in relevant_sessions
             ),
             "answers": len(scores),

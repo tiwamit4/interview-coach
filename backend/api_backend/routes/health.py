@@ -23,6 +23,8 @@ async def ui_config():
         "recording_start_timeout_seconds": config.RECORDING_START_TIMEOUT_SECONDS,
         "recording_energy_threshold": config.RECORDING_ENERGY_THRESHOLD,
         "live_transcription_language": config.LIVE_TRANSCRIPTION_LANGUAGE,
+        "simulation_default_minutes": config.SIMULATION_DEFAULT_MINUTES,
+        "simulation_max_minutes": config.SIMULATION_MAX_MINUTES,
         "max_session_questions": config.MAX_SESSION_QUESTIONS,
         "max_session_answer_characters": config.MAX_SESSION_ANSWER_CHARACTERS,
     }

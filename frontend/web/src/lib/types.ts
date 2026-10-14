@@ -30,7 +30,26 @@ export interface Answer {
   evaluation: Evaluation;
   created_at: string;
 }
+export interface Simulation {
+  duration_minutes: number;
+  deadline_at: string;
+  finished_at: string | null;
+  server_time: string;
+  remaining_seconds: number;
+}
+export interface SimulationReport {
+  completion_reason: string;
+  answered_questions: number;
+  unanswered_questions: number;
+  average_score: number | null;
+  rubric_averages: Record<string, number>;
+  strengths: string[];
+  practice_priorities: string[];
+  question_scores: { question: string; score: number }[];
+}
 export interface Session extends SessionSummary {
+  simulation?: Simulation | null;
+  report?: SimulationReport | null;
   questions: string[];
   role_context: string;
   current_question_index: number;
@@ -92,6 +111,8 @@ export interface UIConfig {
   recording_start_timeout_seconds: number;
   recording_energy_threshold: number;
   live_transcription_language: string;
+  simulation_default_minutes: number;
+  simulation_max_minutes: number;
   max_session_questions: number;
   max_session_answer_characters: number;
 }

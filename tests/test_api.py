@@ -177,6 +177,8 @@ class ApiTests(unittest.TestCase):
                 "recording_start_timeout_seconds",
                 "recording_energy_threshold",
                 "live_transcription_language",
+                "simulation_default_minutes",
+                "simulation_max_minutes",
                 "max_session_questions",
                 "max_session_answer_characters",
             },

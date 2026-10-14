@@ -5,6 +5,8 @@ Uses an isolated API database and mocked generation responses; no Groq calls.
 """
 
 import json
+import sqlite3
+from datetime import datetime, timedelta, timezone
 import os
 import shutil
 import socket
@@ -40,6 +42,8 @@ CONFIG = {
     "recording_start_timeout_seconds": 30,
     "recording_energy_threshold": 0.01,
     "live_transcription_language": "en-US",
+    "simulation_default_minutes": 20,
+    "simulation_max_minutes": 120,
     "max_session_questions": 50,
     "max_session_answer_characters": 20000,
 }
@@ -81,7 +85,9 @@ def run():
                 api_script = (
                     "from pathlib import Path; from backend import config; config.DB_PATH=Path("
                     + repr(str(temporary / "test.db"))
-                    + "); from backend.utils import history; history.DB_PATH=config.DB_PATH; from backend.api import app; import uvicorn; uvicorn.run(app,host='127.0.0.1',port="
+                    + "); from backend.utils import history; history.DB_PATH=config.DB_PATH; import sys; sys.path.insert(0,"
+                    + repr(str(ROOT / "tests"))
+                    + "); from result_fixtures import result_for_prompt; from backend.services import sessions; sessions.run_json_prompt=lambda prompt,**values:result_for_prompt(prompt,values.get('answer_text','Answer')); from backend.api import app; import uvicorn; uvicorn.run(app,host='127.0.0.1',port="
                     + str(api_port)
                     + ",log_level='warning')"
                 )
@@ -363,6 +369,91 @@ def run():
                     page = context.new_page()
                     errors = []
                     page.on("pageerror", lambda error: errors.append(str(error)))
+                    # Timed simulations use the real isolated API and production proxy.
+                    page.goto(origin + "/#sessions")
+                    page.get_by_label("Session title", exact=True).fill(
+                        "Timed browser interview"
+                    )
+                    page.get_by_label("Questions, one per line", exact=True).fill(
+                        "Describe your project.\nHow did you test it?"
+                    )
+                    page.get_by_label("Timed interview simulation", exact=True).check()
+                    page.get_by_label("Interview duration (minutes)").fill("5")
+                    page.get_by_role("button", name="Start session", exact=True).click()
+                    page.get_by_role("timer").wait_for()
+                    page.get_by_label("Your answer", exact=True).fill(
+                        "Answer about my project"
+                    )
+                    page.get_by_role("button", name="Submit answer", exact=True).click()
+                    page.get_by_role(
+                        "heading", name="Question 2 of 3", exact=True
+                    ).wait_for()
+                    assert (
+                        page.get_by_role(
+                            "heading", name="Feedback on your latest answer"
+                        ).count()
+                        == 0
+                    )
+                    page.reload()
+                    page.get_by_role(
+                        "button", name="Timed browser interview", exact=False
+                    ).click()
+                    page.get_by_role("timer").wait_for()
+                    page.get_by_role(
+                        "button", name="Finish interview", exact=True
+                    ).click()
+                    page.get_by_role(
+                        "heading", name="Interview performance report", exact=True
+                    ).wait_for()
+                    assert (
+                        "90/100"
+                        in page.get_by_role(
+                            "region", name="Interview performance report"
+                        ).inner_text()
+                    )
+                    page.get_by_role(
+                        "heading", name="Feedback on your latest answer"
+                    ).wait_for()
+                    if not page.get_by_label("Session title", exact=True).is_visible():
+                        page.get_by_role(
+                            "button", name="New session", exact=True
+                        ).click()
+                    page.get_by_label("Session title", exact=True).fill(
+                        "Expiring browser interview"
+                    )
+                    page.get_by_label("Questions, one per line", exact=True).fill(
+                        "Describe your project."
+                    )
+                    page.get_by_label("Timed interview simulation", exact=True).check()
+                    page.get_by_label("Interview duration (minutes)").fill("1")
+                    page.get_by_role("button", name="Start session", exact=True).click()
+                    page.get_by_role("timer").wait_for()
+                    with sqlite3.connect(temporary / "test.db") as database:
+                        database.execute(
+                            "UPDATE interview_simulations SET deadline_at = ? WHERE session_id IN (SELECT id FROM interview_sessions WHERE title = ?)",
+                            (
+                                (
+                                    datetime.now(timezone.utc) + timedelta(seconds=2)
+                                ).isoformat(),
+                                "Expiring browser interview",
+                            ),
+                        )
+                    page.get_by_role(
+                        "button", name="Refresh interview", exact=True
+                    ).click()
+                    page.get_by_role(
+                        "heading", name="Interview performance report", exact=True
+                    ).wait_for(timeout=10000)
+                    assert (
+                        "Time is up"
+                        in page.get_by_role(
+                            "region", name="Interview performance report"
+                        ).inner_text()
+                    )
+                    assert page.get_by_label("Your answer", exact=True).count() == 0
+                    print(
+                        "Real timed simulation, follow-ups, refresh, early finish, and automatic timeout report passed."
+                    )
                     page.route("**/api/**", handle)
                     page.goto(origin)
                     page.get_by_text("Backend connected", exact=True).wait_for()

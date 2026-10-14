@@ -3,7 +3,7 @@
 from backend.utils.logging_utils import logged_step
 import json
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from uuid import uuid4
 
 from backend import config
@@ -18,6 +18,7 @@ from backend.prompts.prompt import (
 )
 from backend.services.generation import run_json_prompt
 from backend.services.session_models import SessionAnswer, SessionCreate
+from backend.services.simulation import timing, report
 from backend.utils.database import connection
 from backend.utils.logging_utils import log_info
 
@@ -46,6 +47,11 @@ def _connection():
             question_index INTEGER NOT NULL, parent_question_index INTEGER NOT NULL,
             reason TEXT NOT NULL, PRIMARY KEY(session_id, question_index)
         )""")
+        db.execute("""CREATE TABLE IF NOT EXISTS interview_simulations (
+            session_id TEXT PRIMARY KEY REFERENCES interview_sessions(id),
+            duration_minutes INTEGER NOT NULL, deadline_at TEXT NOT NULL,
+            finished_at TEXT
+        )""")
         yield db
 
 
@@ -54,12 +60,19 @@ def _now():
 
 
 @logged_step("create_session")
-def create_session(title, questions, role_context="", followups_enabled=False):
+def create_session(
+    title,
+    questions,
+    role_context="",
+    followups_enabled=False,
+    simulation_duration_minutes=None,
+):
     request = SessionCreate(
         title=title,
         questions=questions,
         role_context=role_context,
         followups_enabled=followups_enabled,
+        simulation_duration_minutes=simulation_duration_minutes,
     )
     session_id = uuid4().hex
     now = _now()
@@ -79,6 +92,14 @@ def create_session(title, questions, role_context="", followups_enabled=False):
             "INSERT INTO interview_session_options VALUES (?, ?)",
             (session_id, int(request.followups_enabled)),
         )
+        if request.simulation_duration_minutes is not None:
+            deadline = datetime.fromisoformat(now) + timedelta(
+                minutes=request.simulation_duration_minutes
+            )
+            db.execute(
+                "INSERT INTO interview_simulations VALUES (?, ?, ?, NULL)",
+                (session_id, request.simulation_duration_minutes, deadline.isoformat()),
+            )
     log_info(
         "session_created", session_id=session_id, question_count=len(request.questions)
     )
@@ -107,8 +128,21 @@ def _load(db, session_id):
             (session_id,),
         ).fetchall()
     ]
+    simulation = timing(
+        db.execute(
+            "SELECT * FROM interview_simulations WHERE session_id = ?", (session_id,)
+        ).fetchone()
+    )
     completed = row["current_index"] >= len(questions)
-    return {
+    reason = "all_questions_answered" if completed else None
+    if simulation:
+        if simulation["finished_at"]:
+            reason = reason or "finished_early"
+        elif simulation["remaining_seconds"] <= 0:
+            reason = reason or "time_expired"
+        completed = reason is not None
+    session = {
+        "simulation": simulation,
         "id": row["id"],
         "title": row["title"],
         "questions": questions,
@@ -142,6 +176,31 @@ def _load(db, session_id):
         ],
     }
 
+    session["report"] = report(session, reason) if simulation and completed else None
+    return session
+
+
+@logged_step("finish_simulation")
+def finish_simulation(session_id):
+    with _connection() as db:
+        db.execute("BEGIN IMMEDIATE")
+        session = _load(db, session_id)
+        if not session["simulation"]:
+            raise SessionConflictError("Only timed simulations can be finished early.")
+        if session["status"] != "completed":
+            now = _now()
+            db.execute(
+                "UPDATE interview_simulations SET finished_at = ? WHERE session_id = ?",
+                (now, session_id),
+            )
+            db.execute(
+                "UPDATE interview_sessions SET updated_at = ? WHERE id = ?",
+                (now, session_id),
+            )
+        updated = _load(db, session_id)
+    log_info("simulation_finished", session_id=session_id)
+    return updated
+
 
 @logged_step("get_session")
 def get_session(session_id):
@@ -155,8 +214,9 @@ def list_sessions(limit=50):
     with _connection() as db:
         rows = db.execute(
             """SELECT s.id, s.title, s.questions, s.current_index,
-            s.created_at, s.updated_at, AVG(a.score) AS average_score
+            s.created_at, s.updated_at, m.deadline_at, m.finished_at, AVG(a.score) AS average_score
             FROM interview_sessions s LEFT JOIN interview_answers a ON a.session_id = s.id
+            LEFT JOIN interview_simulations m ON m.session_id = s.id
             GROUP BY s.id ORDER BY s.created_at DESC LIMIT ?""",
             (limit,),
         ).fetchall()
@@ -166,7 +226,15 @@ def list_sessions(limit=50):
             "title": row["title"],
             "status": (
                 "completed"
-                if row["current_index"] >= len(json.loads(row["questions"]))
+                if (
+                    row["current_index"] >= len(json.loads(row["questions"]))
+                    or row["finished_at"] is not None
+                    or (
+                        row["deadline_at"] is not None
+                        and datetime.fromisoformat(row["deadline_at"])
+                        <= datetime.now(timezone.utc)
+                    )
+                )
                 else "active"
             ),
             "total_questions": len(json.loads(row["questions"])),
@@ -189,10 +257,11 @@ def submit_answer(session_id, answer_text, expected_question_index):
         answer_text=answer_text, expected_question_index=expected_question_index
     )
     session = get_session(session_id)
-    if (
-        session["status"] == "completed"
-        or session["current_question_index"] != request.expected_question_index
-    ):
+    if session["status"] == "completed":
+        raise SessionConflictError(
+            "This interview has ended. Reload the session to view your results."
+        )
+    if session["current_question_index"] != request.expected_question_index:
         raise SessionConflictError(
             "This question has already been answered. Reload the session to continue."
         )
@@ -230,9 +299,13 @@ def submit_answer(session_id, answer_text, expected_question_index):
     with _connection() as db:
         db.execute("BEGIN IMMEDIATE")
         current = _load(db, session_id)
-        if (
-            current["current_question_index"] != request.expected_question_index
-            or current["status"] == "completed"
+        if current["current_question_index"] != request.expected_question_index or (
+            current["status"] == "completed"
+            and (
+                not current["simulation"]
+                or current["simulation"]["finished_at"] is not None
+                or current["current_question_index"] >= current["total_questions"]
+            )
         ):
             raise SessionConflictError(
                 "This question has already been answered. Reload the session to continue."
@@ -248,7 +321,7 @@ def submit_answer(session_id, answer_text, expected_question_index):
                 now,
             ),
         )
-        if followup is not None:
+        if followup is not None and current["status"] != "completed":
             questions = current["questions"]
             next_index = request.expected_question_index + 1
             questions.insert(next_index, followup["question"])
@@ -285,7 +358,9 @@ def read_progress_data():
     with _connection() as db:
         db.execute("BEGIN")
         session_rows = db.execute(
-            "SELECT id, title, questions, current_index, created_at FROM interview_sessions"
+            """SELECT s.id, s.title, s.questions, s.current_index, s.created_at,
+            m.deadline_at, m.finished_at FROM interview_sessions s
+            LEFT JOIN interview_simulations m ON m.session_id = s.id"""
         ).fetchall()
         answer_rows = db.execute(
             """SELECT a.session_id, a.question_index, a.score, a.evaluation, a.created_at,

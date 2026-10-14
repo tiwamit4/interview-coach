@@ -18,6 +18,7 @@ def create_interview_session(request: SessionCreate):
             request.questions,
             request.role_context,
             request.followups_enabled,
+            request.simulation_duration_minutes,
         )
     except Exception as exc:
         raise to_http_exception(exc) from exc
@@ -42,6 +43,14 @@ def answer_interview_question(session_id: str, request: SessionAnswer):
         return sessions.submit_answer(
             session_id, request.answer_text, request.expected_question_index
         )
+    except Exception as exc:
+        raise to_http_exception(exc) from exc
+
+
+@router.post("/sessions/{session_id}/finish")
+def finish_interview_simulation(session_id: str):
+    try:
+        return sessions.finish_simulation(session_id)
     except Exception as exc:
         raise to_http_exception(exc) from exc
 

@@ -330,3 +330,28 @@ or `hi-IN`; Groq's `VOICE_LANGUAGE` is configured separately.
 The browser requests mono audio at the configured sample rate, but the actual
 encoding depends on browser support. Recordings use WebM/Opus or M4A. Microphone
 and recognition resources are released after recording or when leaving the page.
+
+
+## Timed Interview Simulation
+
+In the Bun frontend, open **Interview sessions**, enter questions and optional
+role context, and select **Timed interview simulation**. Choose 1-120 minutes
+(default: 20), optionally enable follow-ups, then start the session.
+
+The countdown uses a saved server deadline. Refresh or reopen a saved session to
+resume; closing the browser does not pause time. Recording, transcription, and AI
+processing count toward the duration. Submit before time runs out; an answer
+admitted before the deadline can finish scoring afterward. New submissions after
+the deadline are rejected. Unsubmitted drafts are not saved.
+
+Follow-ups use the same time budget. Feedback stays hidden in the simulation UI
+until the interview ends. Finish early with **Finish interview**, answer every
+question, or let the timer expire to see the performance report. It includes
+answered/unanswered counts, average answer score, rubric averages, strengths,
+practice priorities, and question scores. Scores reflect submitted answers only;
+unanswered questions are not assigned zero. Review original feedback and evidence
+below the report. Export the session and report using JSON, Markdown, or Print/PDF.
+Reports use saved evaluations and require no additional AI call.
+
+Untimed sessions and the preserved Streamlit UI remain available. Timed controls
+and the automatic countdown are provided by the Bun frontend.
