@@ -1,5 +1,6 @@
 """Upload validation shared by the API, UI, and extraction services."""
 
+from backend.utils.logging_utils import logged_step
 from backend import config
 from backend.errors import UploadTooLargeError
 from backend.utils.logging_utils import log_info
@@ -13,6 +14,7 @@ def validate_upload_size(size, max_bytes, kind):
         )
 
 
+@logged_step("read_upload")
 async def read_upload(upload, max_bytes, kind):
     """Check reported size and read at most one byte beyond the allowed limit."""
     reported_size = getattr(upload, "size", None)

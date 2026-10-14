@@ -1,10 +1,14 @@
 """HTTP timeouts and bounded retries for transient GET failures."""
 
+from backend.utils.logging_utils import logged_step
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from backend import config
+
+
+@logged_step("get_url")
 def get_url(url, **kwargs):
     retries = Retry(
         total=config.HTTP_MAX_RETRIES,

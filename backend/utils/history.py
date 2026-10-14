@@ -1,3 +1,4 @@
+from backend.utils.logging_utils import logged_step
 import json
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -21,6 +22,7 @@ def get_connection():
         yield db
 
 
+@logged_step("save_history")
 def save_history(event_type, title, payload):
     created_at = datetime.now(timezone.utc).isoformat()
     with get_connection() as connection:
@@ -34,6 +36,7 @@ def save_history(event_type, title, payload):
         return cursor.lastrowid
 
 
+@logged_step("list_history")
 def list_history(limit=50):
     with get_connection() as connection:
         rows = connection.execute(
@@ -48,6 +51,7 @@ def list_history(limit=50):
     return [dict(row) for row in rows]
 
 
+@logged_step("get_history")
 def get_history(item_id):
     with get_connection() as connection:
         row = connection.execute(

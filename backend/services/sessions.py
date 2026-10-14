@@ -1,13 +1,21 @@
 """Persistent interview sessions with atomic question progression."""
 
+from backend.utils.logging_utils import logged_step
 import json
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from uuid import uuid4
 
 from backend import config
-from backend.errors import GeneratedResultError, SessionConflictError, SessionNotFoundError
-from backend.prompts.prompt import SESSION_FOLLOWUP_PROMPT, VOICE_ANSWER_EVALUATION_PROMPT
+from backend.errors import (
+    GeneratedResultError,
+    SessionConflictError,
+    SessionNotFoundError,
+)
+from backend.prompts.prompt import (
+    SESSION_FOLLOWUP_PROMPT,
+    VOICE_ANSWER_EVALUATION_PROMPT,
+)
 from backend.services.generation import run_json_prompt
 from backend.services.session_models import SessionAnswer, SessionCreate
 from backend.utils.database import connection
@@ -45,6 +53,7 @@ def _now():
     return datetime.now(timezone.utc).isoformat()
 
 
+@logged_step("create_session")
 def create_session(title, questions, role_context="", followups_enabled=False):
     request = SessionCreate(
         title=title,
@@ -134,12 +143,14 @@ def _load(db, session_id):
     }
 
 
+@logged_step("get_session")
 def get_session(session_id):
     with _connection() as db:
         db.execute("BEGIN")
         return _load(db, session_id)
 
 
+@logged_step("list_sessions")
 def list_sessions(limit=50):
     with _connection() as db:
         rows = db.execute(
@@ -172,6 +183,7 @@ def list_sessions(limit=50):
     ]
 
 
+@logged_step("submit_answer")
 def submit_answer(session_id, answer_text, expected_question_index):
     request = SessionAnswer(
         answer_text=answer_text, expected_question_index=expected_question_index
@@ -267,6 +279,7 @@ def submit_answer(session_id, answer_text, expected_question_index):
     return {"session": updated, "answer": updated["answers"][-1]}
 
 
+@logged_step("read_progress_data")
 def read_progress_data():
     """Read all session metadata and evaluated answers in one consistent snapshot."""
     with _connection() as db:

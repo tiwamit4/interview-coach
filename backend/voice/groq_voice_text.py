@@ -5,6 +5,7 @@ This module converts audio input to text output using Groq Whisper. It does not
 generate audio output.
 """
 
+from backend.utils.logging_utils import logged_step
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -28,6 +29,7 @@ DEFAULT_MODEL = VOICE_MODEL
 DEFAULT_TEMPERATURE = VOICE_TEMPERATURE
 
 
+@logged_step("transcribe_audio")
 def transcribe_audio(
     audio_path,
     model=DEFAULT_MODEL,
@@ -76,6 +78,7 @@ def transcribe_audio(
     return text
 
 
+@logged_step("translate_audio")
 def translate_audio(
     audio_path,
     model=DEFAULT_MODEL,

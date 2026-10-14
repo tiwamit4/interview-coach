@@ -1,5 +1,6 @@
 """Groq calls with explicit network policy and bounded input/output budgets."""
 
+from backend.utils.logging_utils import logged_step
 import os
 
 from dotenv import load_dotenv
@@ -25,6 +26,7 @@ def get_groq_client():
     )
 
 
+@logged_step("complete")
 def _complete(content, *, temperature, max_tokens):
     if len(content.encode("utf-8")) > config.MAX_CHAT_PROMPT_BYTES:
         limit_kib = config.MAX_CHAT_PROMPT_BYTES / 1024
@@ -35,6 +37,12 @@ def _complete(content, *, temperature, max_tokens):
     budget = min(max_tokens, config.CHAT_MAX_COMPLETION_TOKENS)
     try:
         for attempt in range(config.CHAT_COMPLETION_EXPANSIONS + 1):
+            log_info(
+                "generation_attempt_started",
+                attempt=attempt + 1,
+                model=config.CHAT_MODEL,
+                completion_budget=budget,
+            )
             response = client.chat.completions.create(
                 model=config.CHAT_MODEL,
                 messages=[{"role": "user", "content": content}],
@@ -44,6 +52,7 @@ def _complete(content, *, temperature, max_tokens):
                 stream=False,
                 stop=config.CHAT_STOP,
             )
+            log_info("generation_attempt_completed", attempt=attempt + 1)
             choice = response.choices[0]
             if getattr(choice, "finish_reason", None) == "length":
                 if (
@@ -71,6 +80,7 @@ def _complete(content, *, temperature, max_tokens):
         ) from exc
     finally:
         client.close()
+        log_info("generation_client_closed")
 
 
 def groq_model_call(text, prompt):

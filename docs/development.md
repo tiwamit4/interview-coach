@@ -258,3 +258,32 @@ docker compose --profile streamlit down
 The first command starts Bun and FastAPI. The second additionally starts Streamlit.
 Bun waits for the API health check before starting. Health checks verify server
 availability and do not consume Groq credits or validate provider credentials.
+
+
+## Container logs
+
+After changing logging code, rebuild the running services:
+
+```powershell
+docker compose up --build -d --wait
+docker compose logs --timestamps --follow api web
+```
+
+This prints retained logs and follows new events. Add `--profile streamlit` before
+`logs` and include `ui` to view the optional Streamlit service too. Docker logs
+contain server activity; browser-only actions such as microphone permission and
+live speech preview remain in the browser.
+
+JSON events cover request start/completion, proxy calls, upload reading, temporary
+file cleanup, PDF pages, extraction, AI completion attempts, parsing, validation,
+output saving, database operations, sessions, history, and progress. Service steps
+emit `operation_started`, `operation_completed`, or `operation_failed` with duration.
+The Bun proxy and API share `request_id`, also returned in `X-Request-ID`.
+Prompts, answers, audio, document contents, credentials, and query strings are not
+recorded. Provider SDK internal retries remain managed by the SDK; generation
+attempt events describe the application's completion-budget attempts.
+
+Logs go directly to container stdout/stderr at the configured `LOG_LEVEL` (INFO
+by default); no log-file mount is needed. Docker retains logs for existing
+containers according to its logging driver; recreating a container discards its
+old local logs. Use a log collector if you need long-term retention.

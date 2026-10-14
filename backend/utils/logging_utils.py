@@ -7,8 +7,11 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from datetime import datetime, timezone
 from time import perf_counter
+from functools import wraps
+from inspect import iscoroutinefunction
 
 from backend import config
+
 REQUEST_ID = ContextVar("request_id", default=None)
 
 
@@ -50,7 +53,17 @@ def log_info(event, **context):
 def log_operation(operation, **context):
     started = perf_counter()
     log_info("operation_started", operation=operation, **context)
-    yield
+    try:
+        yield
+    except Exception as exc:
+        log_error(
+            exc,
+            event="operation_failed",
+            operation=operation,
+            duration_ms=round((perf_counter() - started) * 1000, 2),
+            **context,
+        )
+        raise
     log_info(
         "operation_completed",
         operation=operation,
@@ -67,3 +80,26 @@ def log_error(exc, *, event, **context):
         for frame in frames
     ]
     log_event(event, **context)
+
+
+def logged_step(operation):
+    """Trace a service boundary without recording its arguments or result."""
+
+    def decorate(function):
+        if iscoroutinefunction(function):
+
+            @wraps(function)
+            async def asynchronous(*args, **kwargs):
+                with log_operation(operation):
+                    return await function(*args, **kwargs)
+
+            return asynchronous
+
+        @wraps(function)
+        def synchronous(*args, **kwargs):
+            with log_operation(operation):
+                return function(*args, **kwargs)
+
+        return synchronous
+
+    return decorate

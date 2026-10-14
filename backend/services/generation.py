@@ -1,5 +1,6 @@
 """Shared question generation, prompt execution, and JSON parsing."""
 
+from backend.utils.logging_utils import logged_step
 import json
 
 from pydantic import TypeAdapter, ValidationError
@@ -45,6 +46,7 @@ RESULT_NAMES = {
 TEXT_RESULT = TypeAdapter(NonEmptyText)
 
 
+@logged_step("validate_text_response")
 def validate_text_response(response):
     try:
         return TEXT_RESULT.validate_python(response, strict=True)
@@ -66,6 +68,7 @@ def generate_prompt_response(prompt, **prompt_values):
         return validate_text_response(groq_prompt_call(prompt, **prompt_values))
 
 
+@logged_step("parse_json_response")
 def parse_json_response(response_text):
     try:
         return json.loads(response_text)
@@ -77,6 +80,7 @@ def parse_json_response(response_text):
         raise
 
 
+@logged_step("run_json_prompt")
 def run_json_prompt(
     prompt, *, response_model: type[GeneratedResult] | None = None, **values
 ):
@@ -94,6 +98,7 @@ def run_json_prompt(
         raise GeneratedResultError(
             f"Groq returned invalid JSON for {name}. Try generating again."
         ) from exc
+    log_info("result_validation_started", response_model=model.__name__)
     try:
         result = model.model_validate(
             payload, strict=True, context={"answer_text": values.get("answer_text")}

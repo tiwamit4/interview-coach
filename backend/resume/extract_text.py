@@ -1,3 +1,4 @@
+from backend.utils.logging_utils import logged_step, log_info
 import importlib
 import subprocess
 from pathlib import Path
@@ -14,14 +15,17 @@ if PdfReader is None:
     raise ImportError("Requires pypdf or PyPDF2 to be installed")
 
 
+@logged_step("read_pdf")
 def read_pdf(pdf_path):
     """
     Read pdf file and extract text
     """
     reader = PdfReader(pdf_path)
     text = ""
-    for page in reader.pages:
+    log_info("pdf_opened", page_count=len(reader.pages))
+    for index, page in enumerate(reader.pages, 1):
         page_text = page.extract_text()
+        log_info("pdf_page_extracted", page=index, character_count=len(page_text or ""))
         if page_text:
             text += page_text
     return text

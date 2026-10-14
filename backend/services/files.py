@@ -1,5 +1,6 @@
 """Shared output paths, filename handling, and serialization."""
 
+from backend.utils.logging_utils import logged_step
 import json
 from pathlib import Path
 from urllib.parse import urlparse
@@ -19,6 +20,7 @@ def safe_filename_from_url(url):
     return safe_filename(slug)
 
 
+@logged_step("write_output")
 def _write_output(directory, filename, serialize):
     output_dir = Path(directory)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -36,7 +38,7 @@ def _write_output(directory, filename, serialize):
         except Exception:
             output_path.unlink(missing_ok=True)
             raise
-        log_info("output_saved", output_path=str(output_path), format=base.suffix)
+        log_info("output_saved", format=base.suffix)
         return output_path
     raise FileExistsError("Could not allocate a unique output filename.")
 

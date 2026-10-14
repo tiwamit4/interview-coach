@@ -8,7 +8,7 @@ from backend import config
 from backend.jd.extract_text import scrape_job_description
 from backend.resume.extract_text import read_pdf
 from backend.services.uploads import validate_upload_size
-from backend.utils.logging_utils import log_operation
+from backend.utils.logging_utils import log_info, log_operation
 from backend.voice.groq_voice_text import transcribe_audio, translate_audio
 
 
@@ -20,10 +20,12 @@ def temporary_upload(content, suffix):
         with NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
             temp_path = Path(temp_file.name)
             temp_file.write(content)
+        log_info("temporary_upload_created", size_bytes=len(content))
         yield temp_path
     finally:
         if temp_path:
             temp_path.unlink(missing_ok=True)
+            log_info("temporary_upload_removed")
 
 
 def extract_job_description(url):

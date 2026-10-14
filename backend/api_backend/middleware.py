@@ -2,7 +2,7 @@
 
 import logging
 from time import perf_counter
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from backend.utils.logging_utils import REQUEST_ID, log_error, log_event
 
@@ -15,10 +15,17 @@ class RequestLoggingMiddleware:
         if scope["type"] != "http":
             return await self.app(scope, receive, send)
         request_id = uuid4().hex
+        incoming = dict(scope.get("headers", [])).get(b"x-request-id", b"")
+        try:
+            if len(incoming) in (32, 36):
+                request_id = UUID(incoming.decode("ascii")).hex
+        except (ValueError, UnicodeDecodeError):
+            pass
         scope.setdefault("state", {})["request_id"] = request_id
         token = REQUEST_ID.set(request_id)
         started = perf_counter()
         status = None
+        log_event("api_request_started", level=logging.INFO, method=scope["method"])
 
         async def send_response(message):
             nonlocal status

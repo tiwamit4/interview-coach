@@ -2,6 +2,7 @@
 Scraping job descriptions from the web and extracting text from them.
 """
 
+from backend.utils.logging_utils import logged_step
 import json
 import re
 from html import unescape
@@ -262,6 +263,7 @@ def find_pdf_links(html, base_url):
     return pdf_urls
 
 
+@logged_step("scrape_job_description")
 def scrape_job_description(url):
     """
     Scrape job description from the given URL and extract text from it.

@@ -1,5 +1,6 @@
 """Deterministic progress summaries from saved interview-session evaluations."""
 
+from backend.utils.logging_utils import logged_step
 import json
 import re
 from collections import Counter, defaultdict
@@ -47,6 +48,7 @@ def _weakness_keys(text):
     return categories or [" ".join(text.casefold().split())]
 
 
+@logged_step("get_progress")
 def get_progress(days=None, include_followups=True):
     """Summarize saved answers without extra model calls or changing saved data."""
     now = datetime.now(timezone.utc)
