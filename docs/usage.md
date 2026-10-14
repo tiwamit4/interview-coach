@@ -355,3 +355,39 @@ Reports use saved evaluations and require no additional AI call.
 
 Untimed sessions and the preserved Streamlit UI remain available. Timed controls
 and the automatic countdown are provided by the Bun frontend.
+
+
+## Daily Practice
+
+Open **Daily practice** in the Bun frontend. The app saves one queue per UTC day
+(default: five questions; configurable from three to five). Refreshing keeps
+today's questions. Use **Start daily practice** or **Continue daily practice** to
+open its saved session; answered questions keep their scores. Completed queues
+can be reviewed, and a new queue becomes available on the next UTC date.
+
+Up to two slots retry earlier low-scoring answers. Selection uses the latest
+attempt at each normalized question, so a question successfully retried at 70/100
+or higher is no longer chosen because of an older low score. Remaining slots use
+questions ordered by each skill's recent average, starting with weaker skills.
+New users receive foundational questions to establish a baseline.
+
+New question difficulty uses up to the latest three scores in that skill:
+foundational initially; applied after at least two answers averaging 70 or more;
+advanced after at least three averaging 85 or more. Lower recent scores can lower
+the next day's difficulty. Foundational questions ask for concepts and examples;
+applied questions add decisions and validation; advanced questions add competing
+constraints, trade-offs, and failure modes. Exact retries retain their original
+wording and are marked separately. Today's saved questions never change midway.
+
+The **Skill improvement** table shows recent averages, attempts, daily practice
+attempt counts, and next difficulty. Expand a skill to inspect every score and
+question difficulty. Change compares the first and latest equally sized groups
+(up to three each), with no overlap; one answer has no change estimate. Earlier
+answers use the same topic matcher as Progress. Daily answers keep their assigned
+skill even when question wording changes. Difficulty labels are rules for
+practice selection, and score differences describe evaluations rather than a
+calibrated measurement of ability.
+
+Queues need no AI call. Answers use the existing grounded evaluation service.
+Daily sessions disable automatic follow-ups to keep queue size and skill mapping
+stable; normal sessions and timed simulations remain available separately.

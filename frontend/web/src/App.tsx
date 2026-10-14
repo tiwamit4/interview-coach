@@ -5,6 +5,7 @@ import {
   BookOpen,
   BriefcaseBusiness,
   ChartNoAxesCombined,
+  CalendarDays,
   ChevronRight,
   Compass,
   FilePenLine,
@@ -23,6 +24,7 @@ import type { UIConfig } from "./lib/types";
 import { Workflows, workflows, type WorkflowKey } from "./pages/Workflows";
 import Voice from "./pages/Voice";
 import Sessions from "./pages/Sessions";
+import DailyPractice from "./pages/DailyPractice";
 import ProgressPage from "./pages/Progress";
 import History from "./pages/History";
 import { ErrorNotice } from "./components/ui";
@@ -34,6 +36,7 @@ const navigation = [
   { id: "applications", label: "Application writer", icon: BriefcaseBusiness },
   { id: "full", label: "Full analysis", icon: Layers3 },
   { id: "voice", label: "Voice practice", icon: AudioLines, group: "PRACTISE" },
+  { id: "daily", label: "Daily practice", icon: CalendarDays },
   { id: "sessions", label: "Interview sessions", icon: Compass },
   {
     id: "progress",
@@ -58,6 +61,7 @@ export default function App() {
     [error, setError] = useState<unknown>(null),
     [connecting, setConnecting] = useState(false),
     [connection, setConnection] = useState(0),
+    [dailySessionId, setDailySessionId] = useState<string | null>(null),
     [draft, setDraft] = useState("");
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? "dark" : "light";
@@ -95,6 +99,7 @@ export default function App() {
   };
   const practice = useCallback((text: string) => {
     setDraft(text);
+    setDailySessionId(null);
     location.hash = "sessions";
     setPage("sessions");
     setMenu(false);
@@ -148,7 +153,7 @@ export default function App() {
         </nav>
         <div className="sidebar-bottom">
           <div className="coach-note">
-            <span className="tiny-star">✳</span>
+            <span className="tiny-star">âœ³</span>
             <p>
               Confidence comes
               <br />
@@ -180,7 +185,7 @@ export default function App() {
           <span className={`connection ${config && !error ? "online" : ""}`}>
             <i />
             {connecting
-              ? "Connecting…"
+              ? "Connectingâ€¦"
               : config && !error
                 ? "Backend connected"
                 : "Backend unavailable"}
@@ -219,8 +224,8 @@ export default function App() {
               <Compass size={40} />
               <h1>
                 {connecting
-                  ? "Getting your workspace ready…"
-                  : "Let’s connect your workspace."}
+                  ? "Getting your workspace readyâ€¦"
+                  : "Letâ€™s connect your workspace."}
               </h1>
               <p>Start the Interview Coach API, then reconnect to begin.</p>
             </div>
@@ -243,6 +248,16 @@ export default function App() {
                   config={config}
                   draft={draft}
                   onDraftUsed={clearDraft}
+                  initialSessionId={dailySessionId}
+                />
+              )}
+              {page === "daily" && (
+                <DailyPractice
+                  onOpenSession={(id) => {
+                    setDailySessionId(id);
+                    setDraft("");
+                    navigate("sessions");
+                  }}
                 />
               )}
               {page === "progress" && <ProgressPage onPractice={practice} />}

@@ -14,6 +14,7 @@ from backend.api_backend.routes import (
     voice,
     workflows,
     sessions,
+    practice,
 )
 
 load_dotenv()
@@ -43,3 +44,5 @@ app.include_router(extraction.router)
 app.include_router(analysis.router)
 app.include_router(history.router)
 app.include_router(sessions.router)
+
+app.include_router(practice.router)

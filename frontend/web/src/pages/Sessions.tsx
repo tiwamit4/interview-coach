@@ -16,10 +16,12 @@ export default function Sessions({
   config,
   draft,
   onDraftUsed,
+  initialSessionId,
 }: {
   config: UIConfig;
   draft: string;
   onDraftUsed: () => void;
+  initialSessionId?: string | null;
 }) {
   const [items, setItems] = useState<SessionSummary[]>([]),
     [session, setSession] = useState<Session | null>(null),
@@ -97,6 +99,12 @@ export default function Sessions({
       setBusy(false);
     }
   }
+  useEffect(() => {
+    if (initialSessionId) {
+      setShowCreate(false);
+      void load(initialSessionId);
+    }
+  }, [initialSessionId]);
   async function create(event: React.FormEvent) {
     event.preventDefault();
     setBusy(true);
@@ -276,7 +284,7 @@ How did you test it?"
               <RefreshCw size={16} />
             </button>
           </div>
-          {loading && <p className="muted">Loading sessionsâ€¦</p>}
+          {loading && <p className="muted">Loading sessionsÃ¢â‚¬Â¦</p>}
           {!items.length && !loading && (
             <p className="muted">Your sessions will appear here.</p>
           )}
@@ -290,7 +298,7 @@ How did you test it?"
               >
                 <strong>{item.title}</strong>
                 <span>
-                  {item.answered_questions}/{item.total_questions} answered Â·{" "}
+                  {item.answered_questions}/{item.total_questions} answered Ã‚Â·{" "}
                   {item.average_score === null
                     ? "No score yet"
                     : `${item.average_score}/100`}
@@ -353,7 +361,7 @@ How did you test it?"
                 {session.status === "completed" ? (
                   <div className="completed">
                     <CheckCircle2 size={36} />
-                    <h2>You showed up. Thatâ€™s progress.</h2>
+                    <h2>You showed up. ThatÃ¢â‚¬â„¢s progress.</h2>
                     {session.report ? (
                       <SimulationReport report={session.report} />
                     ) : (

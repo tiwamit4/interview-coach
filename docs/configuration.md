@@ -89,3 +89,19 @@ Timed interview simulation defaults live in `backend/config.py`:
 `SIMULATION_DEFAULT_MINUTES = 20`, `SIMULATION_MAX_MINUTES = 120`. The Bun
 frontend receives both through `/ui-config`. Deadlines and early finish timestamps
 are persisted in SQLite alongside sessions.
+
+
+Daily practice configuration in `backend/config.py`:
+
+| Setting | Default | Purpose |
+| --- | --- | --- |
+| `DAILY_PRACTICE_QUESTION_COUNT` | 5 | New daily queue size, from 3 to 5 |
+| `DAILY_PRACTICE_REVIEW_COUNT` | 2 | Maximum exact low-score retries |
+| `DAILY_PRACTICE_WINDOW` | 3 | Recent score and comparison window |
+| `DAILY_PRACTICE_APPLIED_MIN_ANSWERS` | 2 | Evidence required for applied questions |
+| `DAILY_PRACTICE_ADVANCED_MIN_ANSWERS` | 3 | Evidence required for advanced questions |
+| `DAILY_PRACTICE_ADVANCED_SCORE` | 85 | Recent average for advanced questions |
+
+`PROGRESS_PRACTICE_SCORE` (70) is also the successful-retry/applied threshold.
+Settings affect newly created queues; existing daily queues remain unchanged.
+Daily practice uses UTC date boundaries and the same SQLite database as sessions.

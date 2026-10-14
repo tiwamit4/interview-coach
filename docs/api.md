@@ -336,3 +336,28 @@ A final report includes `completion_reason` (`all_questions_answered`,
 saved feedback, and individual question scores. Unanswered questions are excluded
 from score averages. Reports require no extra generation. Feedback visibility
 is a UI choice; API responses continue to include saved evaluations.
+
+
+## Daily Practice
+
+`GET /practice/daily` returns (and creates if missing) the stable queue for today's
+UTC date. The response includes `date`, `timezone`, nullable `session_id`, `status`
+(`not_started`, `active`, `completed`), answered count, `items`, and live `skills`
+statistics. Each item contains question, assigned skill, difficulty, selection
+reason, optional source session/previous score for a retry, and completion/score.
+
+`POST /practice/daily/start` atomically creates or reopens the linked interview
+session and returns the normal session response. Concurrent calls create one
+session per day. Submit answers through the existing session answer endpoint.
+The queue's questions and assigned skills persist; session creation and linking
+share one SQLite transaction. Queues do not enable follow-ups or simulation time
+limits. Reports in `/progress` continue to include their evaluated answers.
+
+Skill statistics include recent average, recommended difficulty, first/latest
+comparison averages, score change, comparison sample size, daily-practice attempt
+count, and chronological score/difficulty history. Old answers use shared topic
+matching; linked queue answers use their saved skill. Unknown old difficulty is
+`unclassified`, exact retries are `original`, and new questions use
+`foundational`, `applied`, or `advanced`. Queues and trend calculations require no
+additional model calls. Dates use UTC; this single-user app currently shares one
+queue and history across clients.

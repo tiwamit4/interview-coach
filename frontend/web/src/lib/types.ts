@@ -117,3 +117,33 @@ export interface UIConfig {
   max_session_answer_characters: number;
 }
 export type Result = Record<string, unknown>;
+
+export interface DailyPractice {
+  date: string;
+  timezone: string;
+  session_id: string | null;
+  status: "not_started" | "active" | "completed";
+  answered_questions: number;
+  items: {
+    question: string;
+    skill: string;
+    difficulty: string;
+    reason: string;
+    source_session_id: string | null;
+    previous_score: number | null;
+    completed: boolean;
+    score: number | null;
+  }[];
+  skills: {
+    skill: string;
+    attempts: number;
+    difficulty: string;
+    recent_average: number;
+    baseline_average: number | null;
+    comparison_average: number | null;
+    score_change: number | null;
+    comparison_samples: number;
+    daily_practice_attempts: number;
+    trend: { date: string; score: number; difficulty: string }[];
+  }[];
+}

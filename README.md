@@ -10,6 +10,7 @@ FastAPI, Bun + React, Groq, and SQLite. The original Streamlit UI is also availa
 - Record answers with a live transcript preview, then review the final text before scoring.
 - Save interview sessions with answer-based follow-up questions and resumable progress.
 - Track score trends, recurring feedback, and topics needing practice.
+- Follow a [daily practice queue](docs/usage.md#daily-practice) with weak-topic questions, retries, and adaptive difficulty.
 - Download results as Markdown, PDF, or JSON where supported.
 
 ## Code Layout

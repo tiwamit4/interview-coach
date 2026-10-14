@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 
 from backend import config
 from backend.services.sessions import read_progress_data
+from backend.services.topics import question_skills
 
 # Phrase-based categories are intentionally small and inspectable. Original
 # feedback is retained so users can assess the grouping rather than trust a label.
@@ -16,16 +17,6 @@ WEAKNESS_PATTERNS = {
     "Examples and measurable outcomes": r"\b(example\w*|specific\w*|detail\w*|metric\w*|quantif\w*|measur\w*|impact|outcome\w*|result\w*|evidence)\b",
     "Technical depth and trade-offs": r"\b(technical|trade[ -]?offs?|complexity|edge cases?|depth|alternatives?)\b",
     "Relevance to the role": r"\b(relevan\w*|align\w*|job requirements?|role requirements?)\b",
-}
-TOPIC_PATTERNS = {
-    "Python": r"\bpython\b",
-    "SQL and databases": r"\b(sql|databases?|postgres\w*|mysql|joins?|indexes|indexing)\b",
-    "Machine learning": r"\b(machine learning|ml|models?|training|prediction\w*|accuracy|neural|classification)\b",
-    "APIs and web development": r"\b(apis?|rest|http|fastapi|web|frontend|backend)\b",
-    "Testing and reliability": r"\b(test\w*|validat\w*|debug\w*|reliab\w*|failures?|monitor\w*)\b",
-    "System design": r"\b(system design|architect\w*|scal\w*|distributed|caching|cache|latency)\b",
-    "Projects and experience": r"\b(project\w*|experience|built|implemented)\b",
-    "Teamwork and leadership": r"\b(team\w*|leader\w*|conflict\w*|collaborat\w*|stakeholder\w*)\b",
 }
 
 
@@ -118,11 +109,7 @@ def get_progress(days=None, include_followups=True):
                 if suggestion not in item["examples"] and len(item["examples"]) < 3:
                     item["examples"].append(suggestion)
                 answer_keys.add(key)
-        labels = [
-            name
-            for name, pattern in TOPIC_PATTERNS.items()
-            if re.search(pattern, question, re.IGNORECASE)
-        ] or ["General interview answers"]
+        labels = question_skills(question)
         for label in labels:
             item = topics.setdefault(
                 label,

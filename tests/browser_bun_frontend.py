@@ -454,6 +454,67 @@ def run():
                     print(
                         "Real timed simulation, follow-ups, refresh, early finish, and automatic timeout report passed."
                     )
+                    # Real daily queue: start, leave, resume, complete, and inspect skill tracking.
+                    page.get_by_role("navigation").get_by_role(
+                        "button", name="Daily practice", exact=True
+                    ).click()
+                    page.get_by_role(
+                        "heading", name="Today's queue", exact=True
+                    ).wait_for()
+                    assert page.locator("ol > li").count() == 5
+                    page.get_by_role(
+                        "button", name="Start daily practice", exact=True
+                    ).click()
+                    page.get_by_role(
+                        "heading", name="Question 1 of 5", exact=True
+                    ).wait_for()
+                    page.get_by_label("Your answer", exact=True).fill(
+                        "Answer from daily practice"
+                    )
+                    page.get_by_role("button", name="Submit answer", exact=True).click()
+                    page.get_by_role(
+                        "heading", name="Question 2 of 5", exact=True
+                    ).wait_for()
+                    page.get_by_role("navigation").get_by_role(
+                        "button", name="Daily practice", exact=True
+                    ).click()
+                    page.get_by_role(
+                        "button", name="Continue daily practice", exact=True
+                    ).click()
+                    page.get_by_role(
+                        "heading", name="Question 2 of 5", exact=True
+                    ).wait_for()
+                    for index in range(1, 5):
+                        page.get_by_label("Your answer", exact=True).fill(
+                            "Answer from repeated practice"
+                        )
+                        page.get_by_role(
+                            "button", name="Submit answer", exact=True
+                        ).click()
+                        heading = (
+                            "Practice complete"
+                            if index == 4
+                            else f"Question {index+2} of 5"
+                        )
+                        page.get_by_role("heading", name=heading, exact=True).wait_for()
+                    page.get_by_role("navigation").get_by_role(
+                        "button", name="Daily practice", exact=True
+                    ).click()
+                    page.get_by_role(
+                        "button", name="Review today's answers", exact=True
+                    ).wait_for()
+                    page.get_by_role(
+                        "heading", name="Skill improvement", exact=True
+                    ).wait_for()
+                    assert "5/5 answered" in page.locator("main").inner_text()
+                    page.set_viewport_size({"width": 390, "height": 844})
+                    assert page.evaluate(
+                        "document.documentElement.scrollWidth <= window.innerWidth"
+                    )
+                    page.set_viewport_size({"width": 1440, "height": 1100})
+                    print(
+                        "Real daily queue start/resume/completion, skill history, and mobile layout passed."
+                    )
                     page.route("**/api/**", handle)
                     page.goto(origin)
                     page.get_by_text("Backend connected", exact=True).wait_for()

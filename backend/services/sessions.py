@@ -74,36 +74,42 @@ def create_session(
         followups_enabled=followups_enabled,
         simulation_duration_minutes=simulation_duration_minutes,
     )
-    session_id = uuid4().hex
-    now = _now()
     with _connection() as db:
-        db.execute(
-            "INSERT INTO interview_sessions (id, title, questions, role_context, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
-            (
-                session_id,
-                request.title,
-                json.dumps(request.questions, ensure_ascii=False),
-                request.role_context,
-                now,
-                now,
-            ),
-        )
-        db.execute(
-            "INSERT INTO interview_session_options VALUES (?, ?)",
-            (session_id, int(request.followups_enabled)),
-        )
-        if request.simulation_duration_minutes is not None:
-            deadline = datetime.fromisoformat(now) + timedelta(
-                minutes=request.simulation_duration_minutes
-            )
-            db.execute(
-                "INSERT INTO interview_simulations VALUES (?, ?, ?, NULL)",
-                (session_id, request.simulation_duration_minutes, deadline.isoformat()),
-            )
+        session_id = insert_session(db, request)
     log_info(
         "session_created", session_id=session_id, question_count=len(request.questions)
     )
     return get_session(session_id)
+
+
+def insert_session(db, request: SessionCreate):
+    """Insert a validated session into the caller's transaction."""
+    session_id = uuid4().hex
+    now = _now()
+    db.execute(
+        "INSERT INTO interview_sessions (id, title, questions, role_context, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+        (
+            session_id,
+            request.title,
+            json.dumps(request.questions, ensure_ascii=False),
+            request.role_context,
+            now,
+            now,
+        ),
+    )
+    db.execute(
+        "INSERT INTO interview_session_options VALUES (?, ?)",
+        (session_id, int(request.followups_enabled)),
+    )
+    if request.simulation_duration_minutes is not None:
+        deadline = datetime.fromisoformat(now) + timedelta(
+            minutes=request.simulation_duration_minutes
+        )
+        db.execute(
+            "INSERT INTO interview_simulations VALUES (?, ?, ?, NULL)",
+            (session_id, request.simulation_duration_minutes, deadline.isoformat()),
+        )
+    return session_id
 
 
 def _load(db, session_id):
